@@ -7,6 +7,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,24 +49,6 @@ public class WikiPacketReader {
 		packets = loadFromDocument(Jsoup.parse(file, null));
 	}
 	
-	/**
-	 * Retrieve a column element in a set of rows.
-	 * @param rows - the set of rows to look in.
-	 * @param row - the row index.
-	 * @param column - the column index.
-	 * @return The cell, or NULL if not found.
-	 */
-	private Element getCell(Elements rows, int row, int column) {
-		if (row < rows.size()) {
-			Elements columns = rows.get(row).select("td, th");
-			
-			if (column < columns.size())
-				return columns.get(column);
-		}
-		
-		return null;
-	}
-	
 	private String[] getCells(Element row, int start, int count) {
 		String[] result = new String[count];
 		Elements columns = row.getElementsByTag("td");
@@ -77,16 +62,7 @@ public class WikiPacketReader {
 		}
 		return result;
 	}
-	
-	private Element getPreviousHeader(Element table) {
-		Element current = table;
-		
-		while (current != null && !current.tagName().equals("h3")) {
-			current = current.previousElementSibling();
-		}
-		return current;
-	}
-	
+
 	private WikiPacketInfo parseInfo(Element previousHeader) {
 		if (previousHeader == null) 
 			return null;
@@ -95,39 +71,52 @@ public class WikiPacketReader {
 		if (matcher.matches()) {
 			return new WikiPacketInfo(Integer.parseInt(matcher.group(2), 16), matcher.group(1).trim(), null);
 		} else {
-			// Inform the user
-			throw new IllegalStateException("Cannot parse header '" + previousHeader.text() + "'");
+			return null;
 		}
 	}
 	
 	private Map<Integer, WikiPacketInfo> loadFromDocument(Document doc) {
 		Map<Integer, WikiPacketInfo> result = new HashMap<Integer, WikiPacketInfo>();
+		Element bodyContent = doc.getElementById("bodyContent");
 		
-		for (Element tbody : doc.select("table.wikitable > tbody")) {
-			Elements rows = tbody.getElementsByTag("tr");
-			
-			// Make sure we are dealing with some kind of packet table
-			Element firstHeader = getCell(rows, 0, 0);
-			List<WikiPacketField> fields = new ArrayList<WikiPacketField>();
+		NavigableMap<Integer, Element> tables = getSortedMap(bodyContent.getElementsByClass("wikitable"));
+		Elements headlines = bodyContent.getElementsByTag("h3");
+		
+		for (Element headline : headlines) {
+			Element description = headline.getElementsByClass("mw-headline").first();
+			WikiPacketInfo info = parseInfo(description);
 
-			if (firstHeader != null && firstHeader.text().contains("Packet")) {
-				// Add the packet
-				Element previousHeader = getPreviousHeader(tbody.parent());
-				WikiPacketInfo info = parseInfo(previousHeader);
+			// See if this headline describes a packet
+			if (info != null) {
+				List<WikiPacketField> fields = new ArrayList<WikiPacketField>();
+				Entry<Integer, Element> tableEntry = tables.ceilingEntry(headline.siblingIndex() + 1);
 				
-				// Skip the first and last row
-				for (int i = 1; i < rows.size() - 1; i++) {
-					String[] data = getCells(rows.get(i), i == 1 ? 1 : 0, 4);
-					fields.add(new WikiPacketField(data[0], data[1], data[2], data[3]));
+				if (tableEntry != null) {
+					Elements rows = tableEntry.getValue().getElementsByTag("tbody").first().getElementsByTag("tr");
+					
+					// Skip the first and last row
+					for (int i = 1; i < rows.size() - 1; i++) {
+						String[] data = getCells(rows.get(i), i == 1 ? 1 : 0, 4);
+						fields.add(new WikiPacketField(data[0], data[1], data[2], data[3]));
+					}
+					
+					// Save this
+					result.put(info.getPacketID(), 
+							new WikiPacketInfo(info.getPacketID(), info.getPacketName(), fields));
 				}
-				
-				// Save this
-				result.put(info.getPacketID(), 
-						new WikiPacketInfo(info.getPacketID(), info.getPacketName(), fields));
 			}
 		}
 		
 		return result;
+	}
+	
+	private NavigableMap<Integer, Element> getSortedMap(Elements elements) {
+		NavigableMap<Integer, Element> sorted = new TreeMap<Integer, Element>();
+		
+		for (Element element : elements) {
+			sorted.put(element.siblingIndex(), element);
+		}
+		return sorted;
 	}
 
 	public Collection<WikiPacketInfo> getCachedPackets() {
