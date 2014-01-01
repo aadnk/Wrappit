@@ -89,18 +89,14 @@ public class WikiPacketReader {
 			} else if (tag.equals("table")) {			
 				int columnPacketId = getPacketIDColumn(element);
 				
-				System.out.println("ID column: " + columnPacketId);
-				
 				// We have a real packet table
 				if (columnPacketId >= 0) {
 					int packetId = Integer.parseInt(
 						element.select("td").get(columnPacketId).text().replace("0x", "").trim(), 
 						16
 					);
+					
 					PacketType type = PacketType.findCurrent(protocol, sender, packetId);
-					
-					System.out.println(type);
-					
 					result.put(type, processTable(type, element));
 				}
 			}
