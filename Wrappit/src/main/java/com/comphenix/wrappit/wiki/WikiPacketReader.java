@@ -7,16 +7,15 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.PacketType.Protocol;
+import com.comphenix.protocol.PacketType.Sender;
 
 /**
  * Retrieve valuable information from the Minecraft Protocol Wiki.
@@ -26,16 +25,8 @@ import org.jsoup.select.Elements;
 public class WikiPacketReader {
 	public static final String STANDARD_URL = "http://www.wiki.vg/Protocol";
 	
-	/**
-	 * Parse a given packet header.
-	 */
-	private static final String PARSE_HEADER = "((?:[a-zA-Z_/-]* )+)\\(0x([0-9A-F]+)\\)\\s*";
-	
 	// Stored packet information
-	private Map<Integer, WikiPacketInfo> packets;
-	
-	// Used to parse packets
-	private Pattern headerParser = Pattern.compile(PARSE_HEADER, Pattern.CASE_INSENSITIVE);
+	private Map<PacketType, WikiPacketInfo> packets;
 	
 	public WikiPacketReader() throws IOException {
 		this(STANDARD_URL);
@@ -62,79 +53,117 @@ public class WikiPacketReader {
 		}
 		return result;
 	}
-
-	private WikiPacketInfo parseInfo(Element previousHeader) {
-		if (previousHeader == null) 
-			return null;
-		Matcher matcher = headerParser.matcher(previousHeader.text());
-		
-		if (matcher.matches()) {
-			return new WikiPacketInfo(Integer.parseInt(matcher.group(2), 16), matcher.group(1).trim(), null);
-		} else {
-			return null;
-		}
-	}
 	
-	private Map<Integer, WikiPacketInfo> loadFromDocument(Document doc) {
-		Map<Integer, WikiPacketInfo> result = new HashMap<Integer, WikiPacketInfo>();
-		Element bodyContent = doc.getElementById("bodyContent");
+	private Map<PacketType, WikiPacketInfo> loadFromDocument(Document doc) {
+		Map<PacketType, WikiPacketInfo> result = new HashMap<PacketType, WikiPacketInfo>();
+		Element bodyContent = doc.getElementById("mw-content-text");
 		
-		NavigableMap<Integer, Element> tables = getSortedMap(bodyContent.getElementsByClass("wikitable"));
-		Elements headlines = bodyContent.getElementsByTag("h3");
+		// Current protocol and sender
+		Protocol protocol = null;
+		Sender sender = null;
 		
-		for (Element headline : headlines) {
-			Element description = headline.getElementsByClass("mw-headline").first();
-			WikiPacketInfo info = parseInfo(description);
-
-			// See if this headline describes a packet
-			if (info != null) {
-				List<WikiPacketField> fields = new ArrayList<WikiPacketField>();
-				Entry<Integer, Element> tableEntry = tables.ceilingEntry(headline.siblingIndex() + 1);
+		for (Element element : bodyContent.children()) {
+			String tag = element.tagName();
+			
+			// Protocol candidate
+			if (tag.equals("h2")) {
+				try {
+					String text = getEnumText(element.select(".mw-headline").first());
+					protocol = Protocol.valueOf(text);
+					
+				} catch (IllegalArgumentException e) {
+					// We are in a section that is not a protocol
+					protocol = null;
+				}
 				
-				if (tableEntry != null) {
-					Elements rows = tableEntry.getValue().getElementsByTag("tbody").first().getElementsByTag("tr");
+			// Sender candidates
+			} else if (tag.equals("h3")) {
+				String text = getEnumText(element.select(".mw-headline").first());
+				
+				if ("SERVERBOUND".equals(text))
+					sender = Sender.CLIENT;
+				else if ("CLIENTBOUND".equals(text))
+					sender = Sender.SERVER;
+				
+			// Table candidate
+			} else if (tag.equals("table")) {			
+				int columnPacketId = getPacketIDColumn(element);
+				
+				System.out.println("ID column: " + columnPacketId);
+				
+				// We have a real packet table
+				if (columnPacketId >= 0) {
+					int packetId = Integer.parseInt(
+						element.select("td").get(columnPacketId).text().replace("0x", "").trim(), 
+						16
+					);
+					PacketType type = PacketType.findCurrent(protocol, sender, packetId);
 					
-					// Skip the first and last row
-					for (int i = 1; i < rows.size() - 1; i++) {
-						String[] data = getCells(rows.get(i), i == 1 ? 1 : 0, 4);
-						fields.add(new WikiPacketField(data[0], data[1], data[2], data[3]));
-					}
+					System.out.println(type);
 					
-					// Save this
-					result.put(info.getPacketID(), 
-							new WikiPacketInfo(info.getPacketID(), info.getPacketName(), fields));
+					result.put(type, processTable(type, element));
 				}
 			}
 		}
-		
 		return result;
 	}
 	
-	private NavigableMap<Integer, Element> getSortedMap(Elements elements) {
-		NavigableMap<Integer, Element> sorted = new TreeMap<Integer, Element>();
+	private WikiPacketInfo processTable(PacketType type, Element table) {
+		List<WikiPacketField> fields = new ArrayList<WikiPacketField>();
+		Elements rows = table.select("tr");	
 		
-		for (Element element : elements) {
-			sorted.put(element.siblingIndex(), element);
+		// Skip the first row
+		for (int i = 1; i < rows.size(); i++) {
+			String[] data = getCells(rows.get(i), i == 1 ? 1 : 0, 4);
+			fields.add(new WikiPacketField(data[0], data[1], data[2]));
 		}
-		return sorted;
+		// Save this
+		return new WikiPacketInfo(type, fields);
 	}
 
+	/**
+	 * Retrieve the column that contains the packet ID of a packet table.
+	 * @param table - a table.
+	 * @return The 0-based index of this column, or -1 if not found.
+	 */
+	private int getPacketIDColumn(Element table) {
+		Elements headers = table.select("th");
+		
+		// Find the header with the packet ID
+		for (int i = 0; i < headers.size(); i++) {
+			final String text = getEnumText(headers.get(i));
+			
+			if ("PACKET_ID".equals(text)) 
+				return i;
+		}
+		return -1;
+	}
+	
+	/**
+	 * Retrieve the upper-case enum version of the textual content of an element.
+	 * @param element - the element.
+	 * @return The textual content.
+	 */
+	private String getEnumText(Element element) {
+		return element.text().trim().toUpperCase().replace(" ", "_");
+	}
+	
 	public Collection<WikiPacketInfo> getCachedPackets() {
 		return packets.values();
 	}
 
 	/**
 	 * Attempt to retrieve information about a packet from its ID.
-	 * @param packetID - the packet to retrieve.
+	 * @param type - the packet to retrieve.
 	 * @return Information about this packet.
 	 * @throws IOException If this packet cannot be found on the Wiki.
 	 */
-	public WikiPacketInfo readPacket(int packetID) throws IOException {
-		WikiPacketInfo result = packets.get(packetID);
+	public WikiPacketInfo readPacket(PacketType type) throws IOException {
+		WikiPacketInfo result = packets.get(type);
 		
 		if (result != null)
 			return result;
 		else
-			throw new IOException("Packet " + packetID + " cannot be found on the wiki.");
+			throw new IOException("Packet " + type + " cannot be found on the wiki.");
 	}
 }

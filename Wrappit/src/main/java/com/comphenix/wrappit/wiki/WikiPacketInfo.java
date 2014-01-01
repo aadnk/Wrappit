@@ -2,23 +2,19 @@ package com.comphenix.wrappit.wiki;
 
 import java.util.List;
 
+import com.comphenix.protocol.PacketType;
+
 public class WikiPacketInfo {
-	private int packetID;
-	private String packetName;
+	private PacketType type;
 	private List<WikiPacketField> packetFields;
 	
-	public WikiPacketInfo(int packetID, String packetName, List<WikiPacketField> packetFields) {
-		this.packetID = packetID;
-		this.packetName = packetName;
+	public WikiPacketInfo(PacketType type, List<WikiPacketField> packetFields) {
+		this.type = type;
 		this.packetFields = packetFields;
 	}
 
-	public int getPacketID() {
-		return packetID;
-	}
-	
-	public String getPacketName() {
-		return packetName;
+	public PacketType getType() {
+		return type;
 	}
 	
 	public Iterable<WikiPacketField> getPacketFields() {
@@ -27,6 +23,6 @@ public class WikiPacketInfo {
 	
 	@Override
 	public String toString() {
-		return String.format("%s (%s)", packetName, packetID);
+		return String.valueOf(type);
 	}
 }

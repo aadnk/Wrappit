@@ -16,13 +16,30 @@
       <id>bukkit-rep</id>
       <url>http://repo.bukkit.org/content/groups/public</url>
     </repository>
+    <repository>
+      <id>comphenix-releases</id>
+      <name>Comphenix Maven Releases</name>
+      <url>http://repo.comphenix.net/content/repositories/releases/</url>
+    </repository>
   </repositories>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
-asm-util
+  
   <dependencies>
+    <dependency>
+  		<groupId>org.bukkit</groupId>
+  		<artifactId>craftbukkit</artifactId>
+  		<version>1.7.2-R0.1-SNAPSHOT</version>
+  		<scope>provided</scope>
+  	</dependency>
+  	<dependency>
+  	  <groupId>com.comphenix.protocol</groupId>
+  	  <artifactId>ProtocolLib</artifactId>
+  	  <version>3.1.1-SNAPSHOT</version>
+  	</dependency>
+  
 	<dependency>
 		<groupId>org.ow2.asm</groupId>
 		<artifactId>asm</artifactId>
@@ -33,11 +50,6 @@ asm-util
   		<artifactId>jsoup</artifactId>
   		<version>1.7.1</version>
 	</dependency>
-	<dependency>
-  		<groupId>org.bukkit</groupId>
-  		<artifactId>minecraft-server</artifactId>
-  		<version>1.6.1</version>
-  	</dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

@@ -13,13 +13,12 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-public class CodePacketReader {
+import com.comphenix.protocol.PacketType;
 
+public class CodePacketReader {
 	// Write packet method signature
-	private static final String WRITE_PACKET_SIGNATURE = "(Ljava/io/DataOutput;)V";
-	
-	// Used to access the packet registry
-	private static PacketRegistry registry = new PacketRegistry();
+	private static final String WRITE_PACKET_SIGNATURE = "(Lnet/minecraft/server/v1_7_R1/PacketDataSerializer;)V";
+	private static final String WRITE_PACKET_NAME = "b";
 	
 	/**
 	 * Read a particular packet from local code.
@@ -27,15 +26,15 @@ public class CodePacketReader {
 	 * @return The resulting packet information.
 	 * @throws IOException If we are unable to parse the network order.
 	 */
-	public CodePacketInfo readPacket(int packetID) throws IOException {
-		Class<?> packetClass = registry.getPacketClass(packetID);
+	public CodePacketInfo readPacket(PacketType type) throws IOException {
+		Class<?> packetClass = type.getPacketClass();
 		
 		if (packetClass != null) {
 			List<Field> memoryOrder = readMemoryOrder(packetClass);
 			List<Field> networkOrder = readNetworkOrder(packetClass);
-			return new CodePacketInfo(memoryOrder, networkOrder, packetID);
+			return new CodePacketInfo(memoryOrder, networkOrder, type);
 		} else {
-			throw new IllegalArgumentException("Packet " + packetID + " is not registered.");
+			throw new IllegalArgumentException("Packet " + type + " is not registered.");
 		}
 	}
 	
@@ -64,7 +63,7 @@ public class CodePacketReader {
 				final String writePacketName = name;
 				
 				// Is this our write packet method?
-				if (desc.equals(WRITE_PACKET_SIGNATURE)) {
+				if (desc.equals(WRITE_PACKET_SIGNATURE) && writePacketName.equals(WRITE_PACKET_NAME)) {
 					return new FieldEnumerator(packetClass, result) {
 						@Override
 						public void visitMethodInsn(int opcode, String owner, String name, String desc) {

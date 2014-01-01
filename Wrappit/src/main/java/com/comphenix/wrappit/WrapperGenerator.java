@@ -10,11 +10,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.minecraft.server.DataWatcher;
-import net.minecraft.server.ItemStack;
-import net.minecraft.server.NBTTagCompound;
-import net.minecraft.server.WorldType;
+import net.minecraft.server.v1_7_R1.DataWatcher;
+import net.minecraft.server.v1_7_R1.ItemStack;
+import net.minecraft.server.v1_7_R1.NBTTagCompound;
+import net.minecraft.server.v1_7_R1.WorldType;
 
+import com.comphenix.protocol.PacketType;
 import com.comphenix.wrappit.minecraft.CodePacketInfo;
 import com.comphenix.wrappit.minecraft.CodePacketReader;
 import com.comphenix.wrappit.utils.CaseFormating;
@@ -22,6 +23,7 @@ import com.comphenix.wrappit.utils.IndentBuilder;
 import com.comphenix.wrappit.wiki.WikiPacketField;
 import com.comphenix.wrappit.wiki.WikiPacketInfo;
 import com.comphenix.wrappit.wiki.WikiPacketReader;
+import com.google.common.base.CaseFormat;
 
 public class WrapperGenerator {
 	public enum Modifiers {
@@ -101,35 +103,36 @@ public class WrapperGenerator {
 		this.wikiReader = wikiReader;
 	}
 	
-	public String generateClass(int packetID) throws IOException {
+	public String generateClass(PacketType type) throws IOException {
 		StringBuilder builder = new StringBuilder();
 		IndentBuilder indent = new IndentBuilder(builder, 1);
 		
-		CodePacketInfo codeInfo = codeReader.readPacket(packetID);
-		WikiPacketInfo wikiInfo = wikiReader.readPacket(packetID);
+		CodePacketInfo codeInfo = codeReader.readPacket(type);
+		WikiPacketInfo wikiInfo = wikiReader.readPacket(type);
 		
 		// Java style
-		String className = String.format("Packet%02X", packetID) + CaseFormating.toCamelCase(wikiInfo.getPacketName());
+		String className = type.getPacketClass().getSimpleName().replace("Packet", "Wrapper");
 		
 		// Current field index
 		int fieldIndex = 0;
 		
+		builder.append("import com.comphenix.protocol.PacketType;\n");
 		builder.append("import com.comphenix.protocol.events.PacketContainer;\n\n");
 		builder.append("public class " + className + " extends AbstractPacket {\n");
 
-		indent.appendLine("public static final int ID = " + packetID + ";");
+		indent.appendLine("public static final PacketType TYPE = " + getReference(type) + ";");
 		indent.appendLine("");
 
 		// Default constructors
 		indent.appendLine("public " + className + "() {");
 		indent.incrementIndent().
-			appendLine("super(new PacketContainer(ID), ID);").
+			appendLine("super(new PacketContainer(TYPE), TYPE);").
 			appendLine("handle.getModifier().writeDefaults();");
 		indent.appendLine("}\n");
 		
 		// And the wrapped packet constructor
 		indent.appendLine("public " + className + "(PacketContainer packet) {");
-		indent.incrementIndent().appendLine("super(packet, ID);");
+		indent.incrementIndent().appendLine("super(packet, TYPE);");
 		indent.appendLine("}\n");
 		
 		for (WikiPacketField field : wikiInfo.getPacketFields()) {
@@ -152,6 +155,14 @@ public class WrapperGenerator {
 
 		builder.append("}\n");
 		return builder.toString();
+	}
+
+	private String getReference(PacketType type) {
+		return "PacketType." + getCamelCase(type.getProtocol()) + "." + getCamelCase(type.getSender()) + "." + type.name();
+	}
+	
+	private String getCamelCase(Enum<?> enumValue) {
+		return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, enumValue.name());
 	}
 	
 	private String getFieldType(WikiPacketField field) {

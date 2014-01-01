@@ -3,15 +3,17 @@ package com.comphenix.wrappit.minecraft;
 import java.lang.reflect.Field;
 import java.util.List;
 
+import com.comphenix.protocol.PacketType;
+
 public class CodePacketInfo {
 	private final List<Field> memoryOrder;
 	private final List<Field> networkOrder;
-	private final int packetID;
+	private final PacketType type;
 	
-	public CodePacketInfo(List<Field> memoryOrder, List<Field> networkOrder, int packetID) {
+	public CodePacketInfo(List<Field> memoryOrder, List<Field> networkOrder, PacketType type) {
 		this.memoryOrder = memoryOrder;
 		this.networkOrder = networkOrder;
-		this.packetID = packetID;
+		this.type = type;
 	}
 
 	/**
@@ -32,7 +34,7 @@ public class CodePacketInfo {
 		return networkOrder;
 	}
 
-	public int getPacketID() {
-		return packetID;
+	public PacketType getType() {
+		return type;
 	}
 }
