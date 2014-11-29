@@ -17,7 +17,8 @@ public class Application {
 		CodePacketReader codeReader = new CodePacketReader();
 		WikiPacketReader wikiReader = new WikiPacketReader(new File("I:/Temp/MinecraftProtocol/1.7.2/Protocol - MinecraftCoalition.htm"));
 		WrapperGenerator generator = new WrapperGenerator(codeReader, wikiReader);
+
 		
-		System.out.println(generator.generateClass(PacketType.Play.Server.KEEP_ALIVE));
+		System.out.println(generator.generateClass(PacketType.Play.Client.WINDOW_CLICK));
 	}
 }

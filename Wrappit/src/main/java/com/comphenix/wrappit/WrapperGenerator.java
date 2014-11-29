@@ -10,10 +10,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.minecraft.server.v1_7_R1.Block;
+import net.minecraft.server.v1_7_R1.ChunkCoordIntPair;
 import net.minecraft.server.v1_7_R1.DataWatcher;
+import net.minecraft.server.v1_7_R1.IChatBaseComponent;
 import net.minecraft.server.v1_7_R1.ItemStack;
 import net.minecraft.server.v1_7_R1.NBTTagCompound;
+import net.minecraft.server.v1_7_R1.ServerPing;
 import net.minecraft.server.v1_7_R1.WorldType;
+import net.minecraft.util.com.mojang.authlib.GameProfile;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.wrappit.minecraft.CodePacketInfo;
@@ -27,26 +32,31 @@ import com.google.common.base.CaseFormat;
 
 public class WrapperGenerator {
 	public enum Modifiers {
-		BOOLEANS(boolean.class, 				 "boolean", 			 "getSpecificModifier(boolean.class)"),
-		BYTES(byte.class, 						 "byte", 				 "getBytes()"),
-		SHORTS(short.class, 					 "short", 				 "getShorts()"),
-		INTEGERS(int.class, 					 "int", 				 "getIntegers()"),
-		LONGS(long.class, 						 "long", 				 "getLongs()"),
-		FLOATS(float.class, 					 "float", 				 "getFloat()"),
-		DOUBLES(double.class, 					 "double", 				 "getDoubles()"),
-		ENUMS(Enum.class, 						 "Enum<?>", 			 "getSpecificModifier(Enum.class)"),
-		STRINGS(String.class, 					 "String", 				 "getStrings()"),
-		STRING_ARRAYS(String[].class, 			 "String[]", 			 "getStringArrays()"),
-		BYTE_ARRAYS(byte[].class, 				 "byte[]", 				 "getByteArrays()"),
-		INTEGER_ARRAYS(int[].class, 			 "int[]", 				 "getIntegerArrays()"),
-		ITEM_MODIFIER(ItemStack.class, 			 "ItemStack", 			 "getItemModifier()"),
-		ITEM_ARRAY_MODIFIER(ItemStack[].class,	 "ItemStack[]", 		 "getItemArrayModifier()"),
-		WORLD_TYPE_MODIFIER(WorldType.class, 	 "WorldType", 			 "getWorldTypeModifier()"),
-		DATA_WATCHER_MODIFIER(DataWatcher.class, "WrappedDataWatcher", 	 "getDataWatcherModifier()"),
-		POSITION_MODIFIER(List.class, 			 "List<ChunkPosition>",  "getPositionCollectionModifier()"),
-		NBT_MODIFIER(NBTTagCompound.class, 	  	 "NbtBase<?>", 			 "getNbtModifier()"),
-		MAP(Map.class, 	  	 					 "Map<?,?>", 			 "getSpecificModifier(Map.class)"),
-		PUBLIC_KEY_MODIFIER(PublicKey.class, 	 "PublicKey", 			 "getSpecificModifier(PublicKey.class)");
+		BOOLEANS(boolean.class, 				 		"boolean", 			 		"getSpecificModifier(boolean.class)"),
+		BYTES(byte.class, 						 		"byte", 			 		"getBytes()"),
+		SHORTS(short.class, 					 		"short", 			 		"getShorts()"),
+		INTEGERS(int.class, 					 		"int", 				 		"getIntegers()"),
+		LONGS(long.class, 						 		"long", 			 		"getLongs()"),
+		FLOATS(float.class, 					 		"float", 			 		"getFloat()"),
+		DOUBLES(double.class, 					 		"double", 			 		"getDoubles()"),
+		ENUMS(Enum.class, 						 		"Enum<?>", 			 		"getSpecificModifier(Enum.class)"),
+		STRINGS(String.class, 					 		"String", 			 		"getStrings()"),
+		STRING_ARRAYS(String[].class, 			 		"String[]", 		 		"getStringArrays()"),
+		BYTE_ARRAYS(byte[].class, 				 		"byte[]", 			 		"getByteArrays()"),
+		INTEGER_ARRAYS(int[].class, 					"int[]", 			 		"getIntegerArrays()"),
+		ITEM_MODIFIER(ItemStack.class, 					"ItemStack", 		 		"getItemModifier()"),
+		ITEM_ARRAY_MODIFIER(ItemStack[].class,			"ItemStack[]", 		 		"getItemArrayModifier()"),
+		WORLD_TYPE_MODIFIER(WorldType.class, 			"WorldType", 				"getWorldTypeModifier()"),
+		DATA_WATCHER_MODIFIER(DataWatcher.class, 		"WrappedDataWatcher", 		"getDataWatcherModifier()"),
+		POSITION_MODIFIER(List.class, 			 		"List<ChunkPosition>",  	"getPositionCollectionModifier()"),
+		NBT_MODIFIER(NBTTagCompound.class, 	  	 		"NbtBase<?>", 				"getNbtModifier()"),
+		MAP(Map.class, 	  	 					 		"Map<?,?>", 				"getSpecificModifier(Map.class)"),
+		PUBLIC_KEY_MODIFIER(PublicKey.class, 	 		"PublicKey", 				"getSpecificModifier(PublicKey.class)"),
+		CHAT_BASE_COMPONENT(IChatBaseComponent.class, 	"WrappedChatComponent",		"getChatComponents()"),
+		GAME_PROFILE(GameProfile.class, 				"WrappedGameProfile",		"getGameProfiles()"),
+		SERVER_PING(ServerPing.class,					"WrappedServerPing",		"getServerPings()"),
+		BLOCK(Block.class,								"Material",					"getBlocks()"),
+		CHUNK_COORD_INT_PAIR(ChunkCoordIntPair.class,	"ChunkCoordIntPair",		"getChunkCoordIntPairs()");
 		
 		private Class<?> inputType;
 		private String outputType;
@@ -66,6 +76,12 @@ public class WrapperGenerator {
 				this.inputType = inputType;
 				this.outputType = outputType;
 				this.name = name;
+		}
+		
+		public boolean isWrapper() {
+			return this == DATA_WATCHER_MODIFIER || this == CHAT_BASE_COMPONENT || 
+				   this == POSITION_MODIFIER || this == GAME_PROFILE || this == SERVER_PING || 
+				   this == BLOCK || this == CHUNK_COORD_INT_PAIR;
 		}
 
 		public Class<?> getInputType() {
@@ -111,7 +127,7 @@ public class WrapperGenerator {
 		WikiPacketInfo wikiInfo = wikiReader.readPacket(type);
 		
 		// Java style
-		String className = type.getPacketClass().getSimpleName().replace("Packet", "Wrapper");
+		String className = "Wrapper" + getCamelCase(type.getProtocol()) + getCamelCase(type.getSender()) + getCamelCase(type.name());
 		
 		// Current field index
 		int fieldIndex = 0;
@@ -162,7 +178,11 @@ public class WrapperGenerator {
 	}
 	
 	private String getCamelCase(Enum<?> enumValue) {
-		return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, enumValue.name());
+		return getCamelCase(enumValue.name());
+	}
+	
+	private String getCamelCase(String text) {
+		return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, text);
 	}
 	
 	private String getFieldType(WikiPacketField field) {
@@ -174,11 +194,12 @@ public class WrapperGenerator {
 			        replace("slot", "ItemStack").
 			        replace("metadata", "WrappedDataWatcher").
 			        replace("unsigned", "").
+			        replace("varint", "int").
 			        replace(" ", "");
 			        
 		// Detect arrays
 		if (type.contains("array")) {
-			return getLongestWord(type.split("\\s+"), ignoreArray) + "[]";
+			return getLongestWord(type.split("\\s+"), ignoreArray).replace("array", "") + "[]";
 		} else {
 			return type;
 		}
@@ -228,7 +249,9 @@ public class WrapperGenerator {
 		String casting = "";
 		
 		// Simple attempt at casting
-		if (!modifier.getOutputType().equals(outputType)) {
+		if (modifier.isWrapper()) {
+			outputType = modifier.getOutputType();
+		} else if (!modifier.getOutputType().equals(outputType)) {
 			casting = " (" + outputType + ")";
 		}
 		
@@ -248,7 +271,9 @@ public class WrapperGenerator {
 		String inputType = getFieldType(field);
 		String casting = "";
 		
-		if (!modifier.getOutputType().equals(inputType)) {
+		if (modifier.isWrapper()) {
+			inputType = modifier.getOutputType();
+		} else if (!modifier.getOutputType().equals(inputType)) {
 			casting = " (" + modifier.getOutputType() + ")";
 		}
 		
