@@ -14,10 +14,11 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.utility.Constants;
 
 public class CodePacketReader {
 	// Write packet method signature
-	private static final String WRITE_PACKET_SIGNATURE = "(Lnet/minecraft/server/v1_7_R1/PacketDataSerializer;)V";
+	private static final String WRITE_PACKET_SIGNATURE = "(Lnet/minecraft/server/" + Constants.PACKAGE_VERSION + "/PacketDataSerializer;)V";
 	private static final String WRITE_PACKET_NAME = "b";
 	
 	/**
@@ -46,7 +47,7 @@ public class CodePacketReader {
 		for (Field field : candidates) {
 			// Skip static fields
 			if (isValidField(field)) {
-				result.add(field);	
+				result.add(field);
 			}
 		}
 		
@@ -101,7 +102,7 @@ public class CodePacketReader {
 	 * @return TRUE if it should, FALSE otherwise.
 	 */
 	private boolean isValidField(Field field) {
-		return !Modifier.isStatic(field.getModifiers()) && 
+		return !Modifier.isStatic(field.getModifiers()) &&
 				// And skip fields in the Packet super class
 			   !field.getDeclaringClass().getSuperclass().equals(Object.class);
 	}
@@ -111,6 +112,7 @@ public class CodePacketReader {
 	 * @param array - array of arrays.
 	 * @return Set containing the union of all the arrays.
 	 */
+	@SafeVarargs
 	private static <T> Set<T> setUnion(T[]... array) {
 		Set<T> result = new LinkedHashSet<T>();
 		
