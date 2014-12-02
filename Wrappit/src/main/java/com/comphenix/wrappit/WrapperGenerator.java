@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import net.minecraft.server.v1_8_R1.Block;
+import net.minecraft.server.v1_8_R1.BlockPosition;
 import net.minecraft.server.v1_8_R1.ChunkCoordIntPair;
 import net.minecraft.server.v1_8_R1.DataWatcher;
 import net.minecraft.server.v1_8_R1.IChatBaseComponent;
@@ -47,7 +48,7 @@ public class WrapperGenerator {
 		ITEM_ARRAY_MODIFIER(ItemStack[].class,			"ItemStack[]", 		 		"getItemArrayModifier()"),
 		WORLD_TYPE_MODIFIER(WorldType.class, 			"WorldType", 				"getWorldTypeModifier()"),
 		DATA_WATCHER_MODIFIER(DataWatcher.class, 		"WrappedDataWatcher", 		"getDataWatcherModifier()"),
-		POSITION_MODIFIER(List.class, 			 		"List<ChunkPosition>",  	"getPositionCollectionModifier()"),
+		POSITION_LIST(List.class, 			 	 		"List<BlockPosition>",  	"getPositionCollectionModifier()"),
 		NBT_MODIFIER(NBTTagCompound.class, 	  	 		"NbtBase<?>", 				"getNbtModifier()"),
 		MAP(Map.class, 	  	 					 		"Map<?,?>", 				"getSpecificModifier(Map.class)"),
 		PUBLIC_KEY_MODIFIER(PublicKey.class, 	 		"PublicKey", 				"getSpecificModifier(PublicKey.class)"),
@@ -56,7 +57,8 @@ public class WrapperGenerator {
 		SERVER_PING(ServerPing.class,					"WrappedServerPing",		"getServerPings()"),
 		BLOCK(Block.class,								"Material",					"getBlocks()"),
 		CHUNK_COORD_INT_PAIR(ChunkCoordIntPair.class,	"ChunkCoordIntPair",		"getChunkCoordIntPairs()"),
-		COMPONENT_ARRAY(IChatBaseComponent[].class,		"IChatBaseComponent[]",		"getChatComponentArrays()");
+		COMPONENT_ARRAY(IChatBaseComponent[].class,		"WrappedChatComponent[]",	"getChatComponentArrays()"),
+		BLOCK_POSITION(BlockPosition.class,				"BlockPosition",			"getBlockPositions()");
 
 		private Class<?> inputType;
 		private String outputType;
@@ -79,7 +81,19 @@ public class WrapperGenerator {
 		}
 
 		public boolean isWrapper() {
-			return this == DATA_WATCHER_MODIFIER || this == CHAT_BASE_COMPONENT || this == POSITION_MODIFIER || this == GAME_PROFILE || this == SERVER_PING || this == BLOCK || this == CHUNK_COORD_INT_PAIR;
+			switch (this) {
+			case DATA_WATCHER_MODIFIER:
+			case CHAT_BASE_COMPONENT:
+			case BLOCK_POSITION:
+			case GAME_PROFILE:
+			case POSITION_LIST:
+			case SERVER_PING:
+			case BLOCK:
+			case CHUNK_COORD_INT_PAIR:
+				return true;
+			default:
+				return false;
+			}
 		}
 
 		public Class<?> getInputType() {
@@ -179,7 +193,12 @@ public class WrapperGenerator {
 		String type = field.getFieldType().toLowerCase();
 
 		// Better names
-		type = type.replace("string", "String").replace("slot", "ItemStack").replace("metadata", "WrappedDataWatcher").replace("unsigned", "").replace("varint", "int").replace(" ", "");
+		type = type.replace("string", "String")
+				.replace("slot", "ItemStack")
+				.replace("metadata", "WrappedDataWatcher")
+				.replace("unsigned", "")
+				.replace("varint", "int")
+				.replace(" ", "");
 
 		// Detect arrays
 		if (type.contains("array")) {
@@ -239,11 +258,16 @@ public class WrapperGenerator {
 			casting = " (" + outputType + ")";
 		}
 
+		String note = CaseFormating.toLowerCaseRange(field.getNotes(), 0, 1).trim();
+		if (note.isEmpty()) {
+			note = field.getFieldName();
+		}
+
 		// Comment
 		indent.appendLine("/**");
-		indent.appendLine(" * Retrieve " + CaseFormating.toLowerCaseRange(field.getNotes(), 0, 1) + ".");
+		indent.appendLine(" * Retrieve " + note + ".");
 		indent.appendLine(" * @return The current " + field.getFieldName());
-		indent.appendLine("*/");
+		indent.appendLine(" */");
 
 		indent.appendLine("public " + outputType + " get" + name + "() {");
 		indent.incrementIndent().appendLine("return" + casting + " handle." + getModifierCall(fieldIndex, ".read(%s);", codeInfo));
@@ -261,11 +285,16 @@ public class WrapperGenerator {
 			casting = " (" + modifier.getOutputType() + ")";
 		}
 
+		String note = CaseFormating.toLowerCaseRange(field.getNotes(), 0, 1).trim();
+		if (note.isEmpty()) {
+			note = field.getFieldName();
+		}
+
 		// Comment
 		indent.appendLine("/**");
-		indent.appendLine(" * Set " + CaseFormating.toLowerCaseRange(field.getNotes(), 0, 1) + ".");
+		indent.appendLine(" * Set " + note + ".");
 		indent.appendLine(" * @param value - new value.");
-		indent.appendLine("*/");
+		indent.appendLine(" */");
 
 		indent.appendLine("public void set" + name + "(" + inputType + " value) {");
 		indent.incrementIndent().appendLine("handle." + getModifierCall(fieldIndex, ".write(%s," + casting + " value);", codeInfo));

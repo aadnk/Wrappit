@@ -104,7 +104,7 @@ public class CodePacketReader {
 	private boolean isValidField(Field field) {
 		return !Modifier.isStatic(field.getModifiers()) &&
 				// And skip fields in the Packet super class
-			   !field.getDeclaringClass().getSuperclass().equals(Object.class);
+			   !field.getDeclaringClass().getSimpleName().equals("Packet");
 	}
 	
 	/**

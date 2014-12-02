@@ -42,10 +42,16 @@ public class Wrappit {
 		System.out.println("Generating wrappers...");
 
 		for (PacketType type : PacketType.values()) {
-			System.out.println("Generating wrapper for " + type);
-			String className = "Wrapper" + getCamelCase(type.getProtocol()) + getCamelCase(type.getSender()) + getCamelCase(type.name());
-			File file = new File(className + ".java");
-			IOUtil.writeLines(file, Arrays.asList(generator.generateClass(type)));
+			try {
+				System.out.println("Generating wrapper for " + type.name());
+				String className = "Wrapper" + getCamelCase(type.getProtocol()) + getCamelCase(type.getSender()) + getCamelCase(type.name());
+				File file = new File(folder, className + ".java");
+				file.createNewFile();
+				IOUtil.writeLines(file, Arrays.asList(generator.generateClass(type)));
+			} catch (Throwable ex) {
+				System.err.println("Failed to generate wrapper for " + type.name());
+				ex.printStackTrace();
+			}
 		}
 
 		System.out.println("Done!");

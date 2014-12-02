@@ -86,13 +86,13 @@ public class WikiPacketReader {
 					sender = Sender.SERVER;
 				
 			// Table candidate
-			} else if (tag.equals("table")) {			
+			} else if (tag.equals("table")) {
 				int columnPacketId = getPacketIDColumn(element);
 				
 				// We have a real packet table
 				if (columnPacketId >= 0) {
 					int packetId = Integer.parseInt(
-						element.select("td").get(columnPacketId).text().replace("0x", "").trim(), 
+						element.select("td").get(columnPacketId).text().replace("0x", "").trim(),
 						16
 					);
 					
@@ -106,7 +106,7 @@ public class WikiPacketReader {
 	
 	private WikiPacketInfo processTable(PacketType type, Element table) {
 		List<WikiPacketField> fields = new ArrayList<WikiPacketField>();
-		Elements rows = table.select("tr");	
+		Elements rows = table.select("tr");
 		
 		// Skip the first row
 		for (int i = 1; i < rows.size(); i++) {
@@ -114,7 +114,7 @@ public class WikiPacketReader {
 			fields.add(new WikiPacketField(data[0], data[1], data[2]));
 		}
 		// Save this
-		return new WikiPacketInfo(type, fields);
+		return new WikiPacketInfo(type, fields.size() > 0 ? fields.subList(1, fields.size()) : fields);
 	}
 
 	/**
@@ -129,7 +129,7 @@ public class WikiPacketReader {
 		for (int i = 0; i < headers.size(); i++) {
 			final String text = getEnumText(headers.get(i));
 			
-			if ("PACKET_ID".equals(text)) 
+			if ("PACKET_ID".equals(text))
 				return i;
 		}
 		return -1;
