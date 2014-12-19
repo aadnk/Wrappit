@@ -15,7 +15,7 @@ public class Wrappit {
 
 	public static void main(String[] args) {
 		try {
-			new Wrappit(new String[0]);
+			new Wrappit(args);
 		} catch (Throwable ex) {
 			ex.printStackTrace();
 		}
