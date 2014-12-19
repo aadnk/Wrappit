@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import net.minecraft.server.v1_8_R1.Block;
 import net.minecraft.server.v1_8_R1.BlockPosition;
@@ -18,6 +19,7 @@ import net.minecraft.server.v1_8_R1.IChatBaseComponent;
 import net.minecraft.server.v1_8_R1.ItemStack;
 import net.minecraft.server.v1_8_R1.NBTTagCompound;
 import net.minecraft.server.v1_8_R1.ServerPing;
+import net.minecraft.server.v1_8_R1.Vec3D;
 import net.minecraft.server.v1_8_R1.WorldType;
 
 import com.comphenix.protocol.PacketType;
@@ -32,37 +34,36 @@ import com.mojang.authlib.GameProfile;
 
 public class WrapperGenerator {
 	public enum Modifiers {
-		BOOLEANS(boolean.class, 				 		"boolean", 			 		"getSpecificModifier(boolean.class)"),
-		BYTES(byte.class, 						 		"byte", 			 		"getBytes()"),
-		SHORTS(short.class, 					 		"short", 			 		"getShorts()"),
-		INTEGERS(int.class, 					 		"int", 				 		"getIntegers()"),
-		LONGS(long.class, 						 		"long", 			 		"getLongs()"),
-		FLOATS(float.class, 					 		"float", 			 		"getFloat()"),
-		DOUBLES(double.class, 					 		"double", 			 		"getDoubles()"),
-		ENUMS(Enum.class, 						 		"Enum<?>", 			 		"getSpecificModifier(Enum.class)"),
-		STRINGS(String.class, 					 		"String", 			 		"getStrings()"),
-		STRING_ARRAYS(String[].class, 			 		"String[]", 		 		"getStringArrays()"),
-		BYTE_ARRAYS(byte[].class, 				 		"byte[]", 			 		"getByteArrays()"),
-		INTEGER_ARRAYS(int[].class, 					"int[]", 			 		"getIntegerArrays()"),
-		ITEM_MODIFIER(ItemStack.class, 					"ItemStack", 		 		"getItemModifier()"),
-		ITEM_ARRAY_MODIFIER(ItemStack[].class,			"ItemStack[]", 		 		"getItemArrayModifier()"),
-		WORLD_TYPE_MODIFIER(WorldType.class, 			"WorldType", 				"getWorldTypeModifier()"),
-		DATA_WATCHER_MODIFIER(DataWatcher.class, 		"WrappedDataWatcher", 		"getDataWatcherModifier()"),
-		POSITION_LIST(List.class, 			 	 		"List<BlockPosition>",  	"getPositionCollectionModifier()"),
-		NBT_MODIFIER(NBTTagCompound.class, 	  	 		"NbtBase<?>", 				"getNbtModifier()"),
-		MAP(Map.class, 	  	 					 		"Map<?,?>", 				"getSpecificModifier(Map.class)"),
-		PUBLIC_KEY_MODIFIER(PublicKey.class, 	 		"PublicKey", 				"getSpecificModifier(PublicKey.class)"),
-		CHAT_BASE_COMPONENT(IChatBaseComponent.class, 	"WrappedChatComponent",		"getChatComponents()"),
-		GAME_PROFILE(GameProfile.class, 				"WrappedGameProfile",		"getGameProfiles()"),
-		SERVER_PING(ServerPing.class,					"WrappedServerPing",		"getServerPings()"),
 		BLOCK(Block.class,								"Material",					"getBlocks()"),
+		BLOCK_POSITION(BlockPosition.class,				"BlockPosition",			"getBlockPositions()"),
+		BOOLEANS(boolean.class, 				 		"boolean", 			 		"getSpecificModifier(boolean.class)"),
+		BYTE_ARRAYS(byte[].class, 				 		"byte[]", 			 		"getByteArrays()"),
+		BYTES(byte.class, 						 		"byte", 			 		"getBytes()"),
+		CHAT_BASE_COMPONENT(IChatBaseComponent.class, 	"WrappedChatComponent",		"getChatComponents()"),
 		CHUNK_COORD_INT_PAIR(ChunkCoordIntPair.class,	"ChunkCoordIntPair",		"getChunkCoordIntPairs()"),
 		COMPONENT_ARRAY(IChatBaseComponent[].class,		"WrappedChatComponent[]",	"getChatComponentArrays()"),
-		BLOCK_POSITION(BlockPosition.class,				"BlockPosition",			"getBlockPositions()");
-
-		private Class<?> inputType;
-		private String outputType;
-		private String name;
+		DATA_WATCHER_MODIFIER(DataWatcher.class, 		"WrappedDataWatcher", 		"getDataWatcherModifier()"),
+		DOUBLES(double.class, 					 		"double", 			 		"getDoubles()"),
+		ENUMS(Enum.class, 						 		"Enum<?>", 			 		"getSpecificModifier(Enum.class)"),
+		FLOATS(float.class, 					 		"float", 			 		"getFloat()"),
+		GAME_PROFILE(GameProfile.class, 				"WrappedGameProfile",		"getGameProfiles()"),
+		INTEGER_ARRAYS(int[].class, 					"int[]", 			 		"getIntegerArrays()"),
+		INTEGERS(int.class, 					 		"int", 				 		"getIntegers()"),
+		ITEM_ARRAY_MODIFIER(ItemStack[].class,			"ItemStack[]", 		 		"getItemArrayModifier()"),
+		ITEM_MODIFIER(ItemStack.class, 					"ItemStack", 		 		"getItemModifier()"),
+		LONGS(long.class, 						 		"long", 			 		"getLongs()"),
+		MAP(Map.class, 	  	 					 		"Map<?,?>", 				"getSpecificModifier(Map.class)"),
+		NBT_MODIFIER(NBTTagCompound.class, 	  	 		"NbtBase<?>", 				"getNbtModifier()"),
+		POSITION_LIST(List.class, 			 	 		"List<BlockPosition>",  	"getPositionCollectionModifier()"),
+		SET(Set.class,									"Set<?>",					"getSpecificModifier(Set.class)"),
+		PUBLIC_KEY_MODIFIER(PublicKey.class, 	 		"PublicKey", 				"getSpecificModifier(PublicKey.class)"),
+		SERVER_PING(ServerPing.class,					"WrappedServerPing",		"getServerPings()"),
+		SHORTS(short.class, 					 		"short", 			 		"getShorts()"),
+		STRING_ARRAYS(String[].class, 			 		"String[]", 		 		"getStringArrays()"),
+		STRINGS(String.class, 					 		"String", 			 		"getStrings()"),
+		UUID(UUID.class,								"UUID",						"getSpecificModifier(UUID.class)"),
+		VEC3D(Vec3D.class,								"Vector",					"getVectors()"),
+		WORLD_TYPE_MODIFIER(WorldType.class, 			"WorldType", 				"getWorldTypeModifier()");
 
 		private static Map<Class<?>, Modifiers> inputLookup;
 
@@ -72,40 +73,6 @@ public class WrapperGenerator {
 			for (Modifiers modifier : values()) {
 				inputLookup.put(modifier.inputType, modifier);
 			}
-		}
-
-		private Modifiers(Class<?> inputType, String outputType, String name) {
-			this.inputType = inputType;
-			this.outputType = outputType;
-			this.name = name;
-		}
-
-		public boolean isWrapper() {
-			switch (this) {
-			case DATA_WATCHER_MODIFIER:
-			case CHAT_BASE_COMPONENT:
-			case BLOCK_POSITION:
-			case GAME_PROFILE:
-			case POSITION_LIST:
-			case SERVER_PING:
-			case BLOCK:
-			case CHUNK_COORD_INT_PAIR:
-				return true;
-			default:
-				return false;
-			}
-		}
-
-		public Class<?> getInputType() {
-			return inputType;
-		}
-
-		public String getOutputType() {
-			return outputType;
-		}
-
-		public String getMethodName() {
-			return name;
 		}
 
 		public static Modifiers getByInputType(Class<?> inputType) {
@@ -119,11 +86,50 @@ public class WrapperGenerator {
 			// Unable to find modifier
 			return null;
 		}
+
+		private Class<?> inputType;
+		private String outputType;
+		private String name;
+
+		private Modifiers(Class<?> inputType, String outputType, String name) {
+			this.inputType = inputType;
+			this.outputType = outputType;
+			this.name = name;
+		}
+
+		public Class<?> getInputType() {
+			return inputType;
+		}
+
+		public String getMethodName() {
+			return name;
+		}
+
+		public String getOutputType() {
+			return outputType;
+		}
+
+		public boolean isWrapper() {
+			switch (this) {
+			case BLOCK:
+			case BLOCK_POSITION:
+			case CHAT_BASE_COMPONENT:
+			case CHUNK_COORD_INT_PAIR:
+			case COMPONENT_ARRAY:
+			case DATA_WATCHER_MODIFIER:
+			case GAME_PROFILE:
+			case POSITION_LIST:
+			case SERVER_PING:
+				return true;
+			default:
+				return false;
+			}
+		}
 	}
 
-	private Set<String> ignoreArray = new HashSet<String>(Arrays.asList("array", "of"));
-
 	private CodePacketReader codeReader;
+
+	private Set<String> ignoreArray = new HashSet<String>(Arrays.asList("array", "of"));
 	private WikiPacketReader wikiReader;
 
 	public WrapperGenerator(CodePacketReader codeReader, WikiPacketReader wikiReader) {
@@ -168,11 +174,26 @@ public class WrapperGenerator {
 				Modifiers modifier = Modifiers.getByInputType(codeField.getType());
 
 				if (modifier == null) {
-					throw new IllegalArgumentException("Cannot find modifier for " + codeField.getType());
+					indent.appendLine("// Cannot find type for " + codeField.getName());
+					System.err.println("Cannot find type " + codeField.getType() + " for field " + codeField.getName());
+					continue;
 				}
 
-				writeGetMethod(indent, fieldIndex, modifier, codeInfo, field);
-				writeSetMethod(indent, fieldIndex, modifier, codeInfo, field);
+				try {
+					writeGetMethod(indent, fieldIndex, modifier, codeInfo, field);
+				} catch (Throwable ex) {
+					indent.appendLine("// Cannot generate getter " + codeField.getName());
+					System.err.println("Failed to generate getter " + codeField.getName());
+					ex.printStackTrace();
+				}
+
+				try {
+					writeSetMethod(indent, fieldIndex, modifier, codeInfo, field);
+				} catch (Throwable ex) {
+					indent.appendLine("// Cannot generate setter " + codeField.getName());
+					System.err.println("Failed to generate setter " + codeField.getName());
+					ex.printStackTrace();
+				}
 			} else {
 				indent.appendLine("// Cannot generate field " + field.getFieldName());
 			}
@@ -184,8 +205,9 @@ public class WrapperGenerator {
 		return builder.toString();
 	}
 
-	private String getReference(PacketType type) {
-		return "PacketType." + Wrappit.getCamelCase(type.getProtocol()) + "." + Wrappit.getCamelCase(type.getSender()) + "." + type.name();
+	private String getFieldName(WikiPacketField field) {
+		String converted = CaseFormating.toCamelCase(field.getFieldName());
+		return converted.replace("Eid", "EntityID");
 	}
 
 	private String getFieldType(WikiPacketField field) {
@@ -206,6 +228,18 @@ public class WrapperGenerator {
 		} else {
 			return type;
 		}
+	}
+
+	private String getLongestWord(String[] input, Set<String> blacklist) {
+		int selected = 0;
+
+		// Find a longer word that is not on the black list
+		for (int i = 1; i < input.length; i++) {
+			if (!blacklist.contains(input[i]) && input[i].length() > input[selected].length()) {
+				selected = i;
+			}
+		}
+		return input[selected];
 	}
 
 	private String getModifierCall(int fieldIndex, String callFormat, CodePacketInfo codeInfo) {
@@ -229,21 +263,8 @@ public class WrapperGenerator {
 		return method + String.format(callFormat, memoryIndex);
 	}
 
-	private String getLongestWord(String[] input, Set<String> blacklist) {
-		int selected = 0;
-
-		// Find a longer word that is not on the black list
-		for (int i = 1; i < input.length; i++) {
-			if (!blacklist.contains(input[i]) && input[i].length() > input[selected].length()) {
-				selected = i;
-			}
-		}
-		return input[selected];
-	}
-
-	private String getFieldName(WikiPacketField field) {
-		String converted = CaseFormating.toCamelCase(field.getFieldName());
-		return converted.replace("Eid", "EntityID");
+	private String getReference(PacketType type) {
+		return "PacketType." + Wrappit.getCamelCase(type.getProtocol()) + "." + Wrappit.getCamelCase(type.getSender()) + "." + type.name();
 	}
 
 	private void writeGetMethod(IndentBuilder indent, int fieldIndex, Modifiers modifier, CodePacketInfo codeInfo, WikiPacketField field) throws IOException {
@@ -259,13 +280,14 @@ public class WrapperGenerator {
 		}
 
 		String note = CaseFormating.toLowerCaseRange(field.getNotes(), 0, 1).trim();
-		if (note.isEmpty()) {
-			note = field.getFieldName();
-		}
 
 		// Comment
 		indent.appendLine("/**");
-		indent.appendLine(" * Retrieve " + note + ".");
+		indent.appendLine(" * Retrieve " + field.getFieldName() + ".");
+		if (!note.isEmpty()) {
+			indent.appendLine(" * <p>");
+			indent.appendLine(" * Notes: " + note);
+		}
 		indent.appendLine(" * @return The current " + field.getFieldName());
 		indent.appendLine(" */");
 
@@ -285,14 +307,11 @@ public class WrapperGenerator {
 			casting = " (" + modifier.getOutputType() + ")";
 		}
 
-		String note = CaseFormating.toLowerCaseRange(field.getNotes(), 0, 1).trim();
-		if (note.isEmpty()) {
-			note = field.getFieldName();
-		}
+		// String note = CaseFormating.toLowerCaseRange(field.getNotes(), 0, 1).trim();
 
 		// Comment
 		indent.appendLine("/**");
-		indent.appendLine(" * Set " + note + ".");
+		indent.appendLine(" * Set " + field.getFieldName() + ".");
 		indent.appendLine(" * @param value - new value.");
 		indent.appendLine(" */");
 

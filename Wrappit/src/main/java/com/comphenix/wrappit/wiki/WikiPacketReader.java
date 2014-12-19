@@ -40,20 +40,6 @@ public class WikiPacketReader {
 		packets = loadFromDocument(Jsoup.parse(file, null));
 	}
 	
-	private String[] getCells(Element row, int start, int count) {
-		String[] result = new String[count];
-		Elements columns = row.getElementsByTag("td");
-		
-		// Convert each cell to text
-		for (int i = 0; i < count; i++) {
-			// We'll ignore non-existant columns
-			if (i + start < columns.size()) {
-				result[i] = columns.get(i + start).text();
-			}
-		}
-		return result;
-	}
-	
 	private Map<PacketType, WikiPacketInfo> loadFromDocument(Document doc) {
 		Map<PacketType, WikiPacketInfo> result = new HashMap<PacketType, WikiPacketInfo>();
 		Element bodyContent = doc.getElementById("mw-content-text");
@@ -91,11 +77,7 @@ public class WikiPacketReader {
 				
 				// We have a real packet table
 				if (columnPacketId >= 0) {
-					int packetId = Integer.parseInt(
-						element.select("td").get(columnPacketId).text().replace("0x", "").trim(),
-						16
-					);
-					
+					int packetId = Integer.parseInt(element.select("td").get(columnPacketId).text().replace("0x", "").trim(), 16);
 					PacketType type = PacketType.findCurrent(protocol, sender, packetId);
 					result.put(type, processTable(type, element));
 				}
@@ -110,11 +92,25 @@ public class WikiPacketReader {
 		
 		// Skip the first row
 		for (int i = 1; i < rows.size(); i++) {
-			String[] data = getCells(rows.get(i), i == 1 ? 1 : 0, 4);
+			String[] data = getCells(rows.get(i), i == 1 ? 3 : 0, 3);
 			fields.add(new WikiPacketField(data[0], data[1], data[2]));
 		}
 		// Save this
-		return new WikiPacketInfo(type, fields.size() > 0 ? fields.subList(1, fields.size()) : fields);
+		return new WikiPacketInfo(type, fields);
+	}
+
+	private String[] getCells(Element row, int start, int count) {
+		String[] result = new String[count];
+		Elements columns = row.getElementsByTag("td");
+		
+		// Convert each cell to text
+		for (int i = 0; i < count; i++) {
+			// We'll ignore non-existant columns
+			if (i + start < columns.size()) {
+				result[i] = columns.get(i + start).text();
+			}
+		}
+		return result;
 	}
 
 	/**
