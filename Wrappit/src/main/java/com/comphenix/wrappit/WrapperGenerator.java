@@ -35,7 +35,7 @@ import com.mojang.authlib.GameProfile;
 public class WrapperGenerator {
 	public enum Modifiers {
 		BLOCK(Block.class,								"Material",					"getBlocks()"),
-		BLOCK_POSITION(BlockPosition.class,				"BlockPosition",			"getBlockPositions()"),
+		BLOCK_POSITION(BlockPosition.class,				"BlockPosition",			"getBlockPositionModifier()"),
 		BOOLEANS(boolean.class, 				 		"boolean", 			 		"getSpecificModifier(boolean.class)"),
 		BYTE_ARRAYS(byte[].class, 				 		"byte[]", 			 		"getByteArrays()"),
 		BYTES(byte.class, 						 		"byte", 			 		"getBytes()"),
@@ -220,6 +220,8 @@ public class WrapperGenerator {
 				.replace("metadata", "WrappedDataWatcher")
 				.replace("unsigned", "")
 				.replace("varint", "int")
+				.replace("bool", "boolean")
+				.replace("uuid", "UUID")
 				.replace(" ", "");
 
 		// Detect arrays
@@ -279,6 +281,13 @@ public class WrapperGenerator {
 			casting = " (" + outputType + ")";
 		}
 
+		// Pattern I noticed fixing wrappers
+		if ((modifier.getOutputType().equalsIgnoreCase("int") || modifier.getOutputType().equalsIgnoreCase("float"))
+				&& (outputType.equalsIgnoreCase("byte") || outputType.equalsIgnoreCase("short"))) {
+			outputType = modifier.getOutputType();
+			casting = "";
+		}
+
 		String note = CaseFormating.toLowerCaseRange(field.getNotes(), 0, 1).trim();
 
 		// Comment
@@ -305,6 +314,13 @@ public class WrapperGenerator {
 			inputType = modifier.getOutputType();
 		} else if (!modifier.getOutputType().equals(inputType)) {
 			casting = " (" + modifier.getOutputType() + ")";
+		}
+
+		// Pattern I noticed fixing wrappers
+		if ((modifier.getOutputType().equalsIgnoreCase("int") || modifier.getOutputType().equalsIgnoreCase("float"))
+				&& (inputType.equalsIgnoreCase("byte") || inputType.equalsIgnoreCase("short"))) {
+			inputType = modifier.getOutputType();
+			casting = "";
 		}
 
 		// String note = CaseFormating.toLowerCaseRange(field.getNotes(), 0, 1).trim();
