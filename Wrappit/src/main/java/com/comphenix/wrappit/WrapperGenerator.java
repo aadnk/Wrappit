@@ -54,7 +54,7 @@ public class WrapperGenerator {
 		LONGS(long.class, 						 		"long", 			 		"getLongs()"),
 		MAP(Map.class, 	  	 					 		"Map<?,?>", 				"getSpecificModifier(Map.class)"),
 		NBT_MODIFIER(NBTTagCompound.class, 	  	 		"NbtBase<?>", 				"getNbtModifier()"),
-		POSITION_LIST(List.class, 			 	 		"List<BlockPosition>",  	"getPositionCollectionModifier()"),
+		POSITION_LIST(List.class, 			 	 		"List<BlockPosition>",  	"getBlockPositionCollectionModifier()"),
 		SET(Set.class,									"Set<?>",					"getSpecificModifier(Set.class)"),
 		PUBLIC_KEY_MODIFIER(PublicKey.class, 	 		"PublicKey", 				"getSpecificModifier(PublicKey.class)"),
 		SERVER_PING(ServerPing.class,					"WrappedServerPing",		"getServerPings()"),
@@ -226,7 +226,7 @@ public class WrapperGenerator {
 
 		// Detect arrays
 		if (type.contains("array")) {
-			return getLongestWord(type.split("\\s+"), ignoreArray).replace("array", "") + "[]";
+			return (getLongestWord(type.split("\\s+"), ignoreArray).replace("array", "") + "[]").replace("of", "");
 		} else {
 			return type;
 		}
