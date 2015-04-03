@@ -34,36 +34,36 @@ import com.mojang.authlib.GameProfile;
 
 public class WrapperGenerator {
 	public enum Modifiers {
-		BLOCK(Block.class,								"Material",					"getBlocks()"),
-		BLOCK_POSITION(BlockPosition.class,				"BlockPosition",			"getBlockPositionModifier()"),
-		BOOLEANS(boolean.class, 				 		"boolean", 			 		"getSpecificModifier(boolean.class)"),
-		BYTE_ARRAYS(byte[].class, 				 		"byte[]", 			 		"getByteArrays()"),
-		BYTES(byte.class, 						 		"byte", 			 		"getBytes()"),
-		CHAT_BASE_COMPONENT(IChatBaseComponent.class, 	"WrappedChatComponent",		"getChatComponents()"),
-		CHUNK_COORD_INT_PAIR(ChunkCoordIntPair.class,	"ChunkCoordIntPair",		"getChunkCoordIntPairs()"),
-		COMPONENT_ARRAY(IChatBaseComponent[].class,		"WrappedChatComponent[]",	"getChatComponentArrays()"),
-		DATA_WATCHER_MODIFIER(DataWatcher.class, 		"WrappedDataWatcher", 		"getDataWatcherModifier()"),
-		DOUBLES(double.class, 					 		"double", 			 		"getDoubles()"),
-		ENUMS(Enum.class, 						 		"Enum<?>", 			 		"getSpecificModifier(Enum.class)"),
-		FLOATS(float.class, 					 		"float", 			 		"getFloat()"),
-		GAME_PROFILE(GameProfile.class, 				"WrappedGameProfile",		"getGameProfiles()"),
-		INTEGER_ARRAYS(int[].class, 					"int[]", 			 		"getIntegerArrays()"),
-		INTEGERS(int.class, 					 		"int", 				 		"getIntegers()"),
-		ITEM_ARRAY_MODIFIER(ItemStack[].class,			"ItemStack[]", 		 		"getItemArrayModifier()"),
-		ITEM_MODIFIER(ItemStack.class, 					"ItemStack", 		 		"getItemModifier()"),
-		LONGS(long.class, 						 		"long", 			 		"getLongs()"),
-		MAP(Map.class, 	  	 					 		"Map<?,?>", 				"getSpecificModifier(Map.class)"),
-		NBT_MODIFIER(NBTTagCompound.class, 	  	 		"NbtBase<?>", 				"getNbtModifier()"),
-		POSITION_LIST(List.class, 			 	 		"List<BlockPosition>",  	"getBlockPositionCollectionModifier()"),
-		SET(Set.class,									"Set<?>",					"getSpecificModifier(Set.class)"),
-		PUBLIC_KEY_MODIFIER(PublicKey.class, 	 		"PublicKey", 				"getSpecificModifier(PublicKey.class)"),
-		SERVER_PING(ServerPing.class,					"WrappedServerPing",		"getServerPings()"),
-		SHORTS(short.class, 					 		"short", 			 		"getShorts()"),
-		STRING_ARRAYS(String[].class, 			 		"String[]", 		 		"getStringArrays()"),
-		STRINGS(String.class, 					 		"String", 			 		"getStrings()"),
-		UUID(UUID.class,								"UUID",						"getSpecificModifier(UUID.class)"),
-		VEC3D(Vec3D.class,								"Vector",					"getVectors()"),
-		WORLD_TYPE_MODIFIER(WorldType.class, 			"WorldType", 				"getWorldTypeModifier()");
+		BLOCK(Block.class,                            "Material",               "getBlocks()"),
+		BLOCK_POSITION(BlockPosition.class,           "BlockPosition",          "getBlockPositionModifier()"),
+		BOOLEANS(boolean.class,                       "boolean",                "getSpecificModifier(boolean.class)"),
+		BYTE_ARRAYS(byte[].class,                     "byte[]",                 "getByteArrays()"),
+		BYTES(byte.class,                             "byte",                   "getBytes()"),
+		CHAT_BASE_COMPONENT(IChatBaseComponent.class, "WrappedChatComponent",   "getChatComponents()"),
+		CHUNK_COORD_INT_PAIR(ChunkCoordIntPair.class, "ChunkCoordIntPair",      "getChunkCoordIntPairs()"),
+		COMPONENT_ARRAY(IChatBaseComponent[].class,   "WrappedChatComponent[]", "getChatComponentArrays()"),
+		DATA_WATCHER_MODIFIER(DataWatcher.class,      "WrappedDataWatcher",     "getDataWatcherModifier()"),
+		DOUBLES(double.class,                         "double",                 "getDoubles()"),
+		ENUMS(Enum.class,                             "Enum<?>",                "getSpecificModifier(Enum.class)"),
+		FLOATS(float.class,                           "float",                  "getFloat()"),
+		GAME_PROFILE(GameProfile.class,               "WrappedGameProfile",     "getGameProfiles()"),
+		INTEGER_ARRAYS(int[].class,                   "int[]",                  "getIntegerArrays()"),
+		INTEGERS(int.class,                           "int",                    "getIntegers()"),
+		ITEM_ARRAY_MODIFIER(ItemStack[].class,        "ItemStack[]",            "getItemArrayModifier()"),
+		ITEM_MODIFIER(ItemStack.class,                "ItemStack",              "getItemModifier()"),
+		LONGS(long.class,                             "long",                   "getLongs()"),
+		MAP(Map.class,                                "Map<?,?>",               "getSpecificModifier(Map.class)"),
+		NBT_MODIFIER(NBTTagCompound.class,            "NbtBase<?>",             "getNbtModifier()"),
+		POSITION_LIST(List.class,                     "List<BlockPosition>",    "getBlockPositionCollectionModifier()"),
+		SET(Set.class,                                "Set<?>",                 "getSpecificModifier(Set.class)"),
+		PUBLIC_KEY_MODIFIER(PublicKey.class,          "PublicKey",              "getSpecificModifier(PublicKey.class)"),
+		SERVER_PING(ServerPing.class,                 "WrappedServerPing",      "getServerPings()"),
+		SHORTS(short.class,                           "short",                  "getShorts()"),
+		STRING_ARRAYS(String[].class,                 "String[]",               "getStringArrays()"),
+		STRINGS(String.class,                         "String",                 "getStrings()"),
+		UUID(UUID.class,                              "UUID",                   "getSpecificModifier(UUID.class)"),
+		VEC3D(Vec3D.class,                            "Vector",                 "getVectors()"),
+		WORLD_TYPE_MODIFIER(WorldType.class,          "WorldType",              "getWorldTypeModifier()");
 
 		private static Map<Class<?>, Modifiers> inputLookup;
 
@@ -127,6 +127,29 @@ public class WrapperGenerator {
 		}
 	}
 
+	private static final String NEWLN = System.getProperty("line.separator");
+
+	private static final String[] HEADER = {
+		"/**",
+		" * This file is part of PacketWrapper.",
+		" * Copyright (C) 2012-2015 Kristian S. Strangeland",
+		" * Copyright (C) 2015 dmulloy2",
+		" *",
+		" * PacketWrapper is free software: you can redistribute it and/or modify",
+		" * it under the terms of the GNU Lesser General Public License as published by",
+		" * the Free Software Foundation, either version 3 of the License, or",
+		" * (at your option) any later version.",
+		" *",
+		" * PacketWrapper is distributed in the hope that it will be useful,",
+		" * but WITHOUT ANY WARRANTY; without even the implied warranty of",
+		" * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the",
+		" * GNU General Public License for more details.",
+		" *",
+		" * You should have received a copy of the GNU Lesser General Public License",
+		" * along with PacketWrapper.  If not, see <http://www.gnu.org/licenses/>.",
+		" */"
+	};
+
 	private CodePacketReader codeReader;
 
 	private Set<String> ignoreArray = new HashSet<String>(Arrays.asList("array", "of"));
@@ -145,15 +168,20 @@ public class WrapperGenerator {
 		WikiPacketInfo wikiInfo = wikiReader.readPacket(type);
 
 		// Java style
-		String className = "Wrapper" + Wrappit.getCamelCase(type.getProtocol()) + Wrappit.getCamelCase(type.getSender()) + Wrappit.getCamelCase(type.name());
+		String className = "Wrapper" + Wrappit.getCamelCase(type.getProtocol()) + Wrappit.getCamelCase(type.getSender())
+				+ Wrappit.getCamelCase(type.name());
 
 		// Current field index
 		int fieldIndex = 0;
 
-		builder.append("package com.comphenix.packetwrapper;\n\n");
-		builder.append("import com.comphenix.protocol.PacketType;\n");
-		builder.append("import com.comphenix.protocol.events.PacketContainer;\n\n");
-		builder.append("public class " + className + " extends AbstractPacket {\n");
+		for (String header : HEADER) {
+			builder.append(header + NEWLN);
+		}
+
+		builder.append("package com.comphenix.packetwrapper;" + NEWLN + NEWLN);
+		builder.append("import com.comphenix.protocol.PacketType;" + NEWLN);
+		builder.append("import com.comphenix.protocol.events.PacketContainer;" + NEWLN + NEWLN);
+		builder.append("public class " + className + " extends AbstractPacket {" + NEWLN + NEWLN);
 
 		indent.appendLine("public static final PacketType TYPE = " + getReference(type) + ";");
 		indent.appendLine("");
@@ -161,12 +189,12 @@ public class WrapperGenerator {
 		// Default constructors
 		indent.appendLine("public " + className + "() {");
 		indent.incrementIndent().appendLine("super(new PacketContainer(TYPE), TYPE);").appendLine("handle.getModifier().writeDefaults();");
-		indent.appendLine("}\n");
+		indent.appendLine("}" + NEWLN);
 
 		// And the wrapped packet constructor
 		indent.appendLine("public " + className + "(PacketContainer packet) {");
 		indent.incrementIndent().appendLine("super(packet, TYPE);");
-		indent.appendLine("}\n");
+		indent.appendLine("}" + NEWLN);
 
 		for (WikiPacketField field : wikiInfo.getPacketFields()) {
 			if (fieldIndex < codeInfo.getNetworkOrder().size()) {
@@ -201,7 +229,7 @@ public class WrapperGenerator {
 			fieldIndex++;
 		}
 
-		builder.append("}\n");
+		builder.append("}");
 		return builder.toString();
 	}
 
@@ -269,7 +297,8 @@ public class WrapperGenerator {
 		return "PacketType." + Wrappit.getCamelCase(type.getProtocol()) + "." + Wrappit.getCamelCase(type.getSender()) + "." + type.name();
 	}
 
-	private void writeGetMethod(IndentBuilder indent, int fieldIndex, Modifiers modifier, CodePacketInfo codeInfo, WikiPacketField field) throws IOException {
+	private void writeGetMethod(IndentBuilder indent, int fieldIndex, Modifiers modifier, CodePacketInfo codeInfo, WikiPacketField field)
+			throws IOException {
 		String name = getFieldName(field);
 		String outputType = getFieldType(field);
 		String casting = "";
@@ -305,7 +334,8 @@ public class WrapperGenerator {
 		indent.appendLine("}\n");
 	}
 
-	private void writeSetMethod(IndentBuilder indent, int fieldIndex, Modifiers modifier, CodePacketInfo codeInfo, WikiPacketField field) throws IOException {
+	private void writeSetMethod(IndentBuilder indent, int fieldIndex, Modifiers modifier, CodePacketInfo codeInfo, WikiPacketField field)
+			throws IOException {
 		String name = getFieldName(field);
 		String inputType = getFieldType(field);
 		String casting = "";

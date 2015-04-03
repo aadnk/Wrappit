@@ -11,7 +11,7 @@ import java.io.IOException;
  * @author Kristian
  */
 public class IndentBuilder implements Appendable {
-	public static String newline = "\n";
+	public static String NEWLN = System.getProperty("line.separator");
 	
 	private final Appendable delegate;
 	private final int indentLevel;
@@ -40,14 +40,16 @@ public class IndentBuilder implements Appendable {
 	
 	public IndentBuilder appendLine(CharSequence csq) throws IOException {
 		append(csq);
-		append(newline);
+		append(NEWLN);
 		return this;
 	}
 	
+	@Override
 	public Appendable append(CharSequence csq) throws IOException {
 		return append(csq, 0, csq.length());
 	}
 
+	@Override
 	public Appendable append(CharSequence csq, int start, int end) throws IOException {
 		for (int i = start; i < end; i++) {
 			append(csq.charAt(i));
@@ -56,6 +58,7 @@ public class IndentBuilder implements Appendable {
 		return this;
 	}
 
+	@Override
 	public Appendable append(char c) throws IOException {
 		if (outstandingIndent) {
 			for (int i = 0; i < indentLevel; i++) {
