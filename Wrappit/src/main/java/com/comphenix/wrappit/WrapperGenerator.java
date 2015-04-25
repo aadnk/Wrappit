@@ -11,16 +11,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import net.minecraft.server.v1_8_R1.Block;
-import net.minecraft.server.v1_8_R1.BlockPosition;
-import net.minecraft.server.v1_8_R1.ChunkCoordIntPair;
-import net.minecraft.server.v1_8_R1.DataWatcher;
-import net.minecraft.server.v1_8_R1.IChatBaseComponent;
-import net.minecraft.server.v1_8_R1.ItemStack;
-import net.minecraft.server.v1_8_R1.NBTTagCompound;
-import net.minecraft.server.v1_8_R1.ServerPing;
-import net.minecraft.server.v1_8_R1.Vec3D;
-import net.minecraft.server.v1_8_R1.WorldType;
+import net.minecraft.server.v1_8_R2.Block;
+import net.minecraft.server.v1_8_R2.BlockPosition;
+import net.minecraft.server.v1_8_R2.ChunkCoordIntPair;
+import net.minecraft.server.v1_8_R2.DataWatcher;
+import net.minecraft.server.v1_8_R2.IChatBaseComponent;
+import net.minecraft.server.v1_8_R2.ItemStack;
+import net.minecraft.server.v1_8_R2.NBTTagCompound;
+import net.minecraft.server.v1_8_R2.ServerPing;
+import net.minecraft.server.v1_8_R2.Vec3D;
+import net.minecraft.server.v1_8_R2.WorldType;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.wrappit.minecraft.CodePacketInfo;
@@ -235,7 +235,9 @@ public class WrapperGenerator {
 
 	private String getFieldName(WikiPacketField field) {
 		String converted = CaseFormating.toCamelCase(field.getFieldName());
-		return converted.replace("Eid", "EntityID");
+		return converted.replace("Eid", "EntityID")
+				.replace("EntityId", "EntityID")
+				.replace("JsonData", "Message");
 	}
 
 	private String getFieldType(WikiPacketField field) {
@@ -331,7 +333,38 @@ public class WrapperGenerator {
 
 		indent.appendLine("public " + outputType + " get" + name + "() {");
 		indent.incrementIndent().appendLine("return" + casting + " handle." + getModifierCall(fieldIndex, ".read(%s);", codeInfo));
-		indent.appendLine("}\n");
+		indent.appendLine("}" + NEWLN);
+
+		// Generate getEntity methods
+		if (name.toLowerCase().contains("entityid")) {
+			writeGetEntityMethods(indent, fieldIndex);
+		}
+	}
+
+	private static final List<String> GET_ENTITY_LINES = Arrays.asList(
+			"/**",
+			" * Retrieve the entity involved in this event.",
+			" * @param world - the current world of the entity.",
+			" * @return The involved entity.",
+			" */",
+			"public Entity getEntity(World world) {",
+			"    return handle.getEntityModifier(world).read(%s);",
+			"}" + NEWLN,
+
+			"/**",
+			" * Retrieve the entity involved in this event.",
+			" * @param event - the packet event.",
+			" * @return The involved entity.",
+			" */",
+			"public Entity getEntity(PacketEvent event) {",
+			"    return getEntity(event.getPlayer().getWorld());",
+			"}" + NEWLN
+	);
+
+	private void writeGetEntityMethods(IndentBuilder indent, int fieldIndex) throws IOException {
+		for (String line : GET_ENTITY_LINES) {
+			indent.appendLine(String.format(line, fieldIndex));
+		}
 	}
 
 	private void writeSetMethod(IndentBuilder indent, int fieldIndex, Modifiers modifier, CodePacketInfo codeInfo, WikiPacketField field)

@@ -5,7 +5,7 @@
   <artifactId>Wrappit</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
-  <description>Automatically generate wrapper classes for ProtocolLib.</description>
+  <description>Automatically generates and updates PacketWrapper classes.</description>
   <name>Wrappit</name>
 
   <properties>
@@ -42,9 +42,7 @@
     <dependency>
       <groupId>org.spigotmc</groupId>
       <artifactId>spigot</artifactId>
-      <version>1.8-R0.1-SNAPSHOT</version>
-      <scope>system</scope>
-      <systemPath>C:/lib/Spigot.jar</systemPath>
+      <version>1.8.3-R0.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.comphenix.protocol</groupId>
@@ -65,7 +63,21 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>3.8.1</version>
-      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>1.8.4</version>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-module-junit4</artifactId>
+      <version>1.5</version>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-mockito</artifactId>
+      <version>1.5</version>
     </dependency>
   </dependencies>
 </project>
