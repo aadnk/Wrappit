@@ -11,16 +11,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import net.minecraft.server.v1_8_R2.Block;
-import net.minecraft.server.v1_8_R2.BlockPosition;
-import net.minecraft.server.v1_8_R2.ChunkCoordIntPair;
-import net.minecraft.server.v1_8_R2.DataWatcher;
-import net.minecraft.server.v1_8_R2.IChatBaseComponent;
-import net.minecraft.server.v1_8_R2.ItemStack;
-import net.minecraft.server.v1_8_R2.NBTTagCompound;
-import net.minecraft.server.v1_8_R2.ServerPing;
-import net.minecraft.server.v1_8_R2.Vec3D;
-import net.minecraft.server.v1_8_R2.WorldType;
+import net.minecraft.server.v1_8_R3.Block;
+import net.minecraft.server.v1_8_R3.BlockPosition;
+import net.minecraft.server.v1_8_R3.ChunkCoordIntPair;
+import net.minecraft.server.v1_8_R3.DataWatcher;
+import net.minecraft.server.v1_8_R3.IChatBaseComponent;
+import net.minecraft.server.v1_8_R3.ItemStack;
+import net.minecraft.server.v1_8_R3.NBTTagCompound;
+import net.minecraft.server.v1_8_R3.ServerPing;
+import net.minecraft.server.v1_8_R3.Vec3D;
+import net.minecraft.server.v1_8_R3.WorldType;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.wrappit.minecraft.CodePacketInfo;
