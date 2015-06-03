@@ -24,10 +24,12 @@ import org.bukkit.Server;
 import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.reflect.FieldUtils;
 import com.comphenix.protocol.utility.Constants;
 import com.comphenix.protocol.utility.MinecraftReflection;
 import com.comphenix.protocol.utility.MinecraftVersion;
+import com.comphenix.wrappit.Wrappit;
 import com.comphenix.wrappit.io.Closer;
 
 /**
@@ -65,10 +67,13 @@ public class WrapperTest {
 			URL[] urls = { new URL("jar:file:" + packetWrapper + "!/") };
 			URLClassLoader loader = URLClassLoader.newInstance(urls);
 
+			List<String> classNames = new ArrayList<>();
 			List<String> failures = new ArrayList<>();
 			for (String name : classes) {
 				try {
 					Class<?> clazz = loader.loadClass(name);
+					classNames.add(clazz.getSimpleName());
+
 					System.out.println("Testing " + clazz.getName() + "...");
 
 					Constructor<?> ctor = clazz.getConstructor();
@@ -76,7 +81,7 @@ public class WrapperTest {
 					for (Method method : clazz.getMethods()) {
 						try {
 							method.setAccessible(true);
-							if (! method.getDeclaringClass().equals(Object.class) && method.getParameterTypes().length == 0) {
+							if (method.getDeclaringClass().equals(clazz) && method.getParameterTypes().length == 0) {
 								System.out.println("Invoking " + method.getName());
 								method.invoke(instance);
 							}
@@ -101,7 +106,26 @@ public class WrapperTest {
 			if (failures.size() > 0) {
 				System.out.println("Encountered " + failures.size() + " failures:");
 				for (String failure : failures) {
-					System.out.println(failure);
+					System.out.println("  " + failure);
+				}
+			}
+
+			failures.clear();
+			System.out.println("Ensuring wrappers for all packet types exist...");
+
+			for (PacketType type : PacketType.values()) {
+				String className = "Wrapper" + Wrappit.getCamelCase(type.getProtocol()) + Wrappit.getCamelCase(type.getSender())
+						+ Wrappit.getCamelCase(type.name());
+				if (! classNames.contains(className)) {
+					failures.add(className);
+				}
+			}
+
+			System.out.println("Done!");
+			if (failures.size() > 0) {
+				System.out.println("Encountered " + failures.size() + " missing wrappers:");
+				for (String failure : failures) {
+					System.out.println("  " + failure);
 				}
 			}
 		} catch (Throwable ex) {
