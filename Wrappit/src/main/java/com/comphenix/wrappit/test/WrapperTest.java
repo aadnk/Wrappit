@@ -21,6 +21,7 @@ import net.minecraft.server.v1_8_R3.DispenserRegistry;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -84,6 +85,18 @@ public class WrapperTest {
 							if (method.getDeclaringClass().equals(clazz) && method.getParameterTypes().length == 0) {
 								System.out.println("Invoking " + method.getName());
 								method.invoke(instance);
+
+								if (method.getName().equalsIgnoreCase("getEntityID")) {
+									if (method.getName().equals("getEntityId")) {
+										System.err.println(clazz.getName() + " :: " + method.getName() + " is improperly cased!");
+									} else {
+										try {
+											clazz.getMethod("getEntity", World.class);
+										} catch (Throwable ex) {
+											System.err.println(clazz.getName() + " does not specify a getEntity(World) method!");
+										}
+									}
+								}
 							}
 						} catch (Throwable ex) {
 							Throwable cause = ex.getCause();
