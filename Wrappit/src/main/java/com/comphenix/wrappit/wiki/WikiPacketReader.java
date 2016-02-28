@@ -78,6 +78,8 @@ public class WikiPacketReader {
 				// We have a real packet table
 				if (columnPacketId >= 0) {
 					int packetId = Integer.parseInt(element.select("td").get(columnPacketId).text().replace("0x", "").trim(), 16);
+
+					@SuppressWarnings("deprecation") // Hopefully this isn't an issue
 					PacketType type = PacketType.findCurrent(protocol, sender, packetId);
 					result.put(type, processTable(type, element));
 				}
