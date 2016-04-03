@@ -77,11 +77,18 @@ public class WikiPacketReader {
 				
 				// We have a real packet table
 				if (columnPacketId >= 0) {
-					int packetId = Integer.parseInt(element.select("td").get(columnPacketId).text().replace("0x", "").trim(), 16);
+					String string = element.select("td").get(columnPacketId).text().replace("0x", "").trim();
+					System.out.println("string=" + string);
+					int packetId = Integer.parseInt(string, 16);
+					System.out.println("packetId=" + packetId);
 
-					@SuppressWarnings("deprecation") // Hopefully this isn't an issue
-					PacketType type = PacketType.findCurrent(protocol, sender, packetId);
-					result.put(type, processTable(type, element));
+					try {
+						@SuppressWarnings("deprecation") // Hopefully this isn't an issue
+						PacketType type = PacketType.findCurrent(protocol, sender, packetId);
+						result.put(type, processTable(type, element));
+					} catch (IllegalArgumentException ex) {
+						System.err.println("Could not find PacketType[id=" + packetId + ", protocol=" + protocol + ", sender=" + sender + "]");
+					}
 				}
 			}
 		}

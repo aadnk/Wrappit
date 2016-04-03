@@ -3,9 +3,6 @@ package com.comphenix.wrappit;
 import java.io.File;
 import java.util.Arrays;
 
-import org.bukkit.craftbukkit.libs.joptsimple.OptionParser;
-import org.bukkit.craftbukkit.libs.joptsimple.OptionSet;
-
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.utility.Constants;
 import com.comphenix.protocol.utility.MinecraftReflection;
@@ -21,7 +18,7 @@ public class Wrappit {
 	private static boolean test = false;
 
 	public static void main(String[] args) {
-		OptionParser parser = new OptionParser() {{
+		/*OptionParser parser = new OptionParser() {{
 			accepts("wikiPage").withRequiredArg().ofType(File.class);
 			accepts("packetWrapper").withOptionalArg().ofType(File.class);
 			accepts("flagOnly");
@@ -40,7 +37,9 @@ public class Wrappit {
 				System.err.println("Must specify PacketWrapper location!");
 				System.exit(2);
 			}
-		}
+		}*/
+		test = true;
+		packetWrapper = new File("C:/Users/Dan/Desktop/Eclipse/eclipse/PacketWrapper/PacketWrapper/target/PacketWrapper.jar");
 
 		try {
 			new Wrappit();

@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import net.minecraft.server.v1_8_R3.DispenserRegistry;
+import net.minecraft.server.v1_9_R1.DispenserRegistry;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
