@@ -28,11 +28,15 @@ import java.util.Arrays;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.utility.Constants;
 import com.comphenix.protocol.utility.MinecraftReflection;
+import com.comphenix.protocol.utility.MinecraftVersion;
 import com.comphenix.wrappit.io.IOUtil;
 import com.comphenix.wrappit.minecraft.CodePacketReader;
 import com.comphenix.wrappit.test.WrapperTest;
 import com.comphenix.wrappit.wiki.WikiPacketReader;
 import com.google.common.base.CaseFormat;
+
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
 
 public class Wrappit {
 	private static File wikiPage = null;
@@ -40,7 +44,20 @@ public class Wrappit {
 	private static boolean test = false;
 
 	public static void main(String[] args) {
-		/*OptionParser parser = new OptionParser() {{
+		generate(new String[] { "--wikiPage", "C:/Users/Dan/Documents/Development/utils/protocol.html" });
+		// generate(args);
+		// test();
+	}
+
+	private static void test() {
+		test = true;
+		packetWrapper = new File("C:/Users/Dan/Documents/Development/personal/PacketWrapper/PacketWrapper/target/PacketWrapper.jar");
+
+		WrapperTest.test(packetWrapper);
+	}
+
+	private static void generate(String[] args) {
+		OptionParser parser = new OptionParser() {{
 			accepts("wikiPage").withRequiredArg().ofType(File.class);
 			accepts("packetWrapper").withOptionalArg().ofType(File.class);
 			accepts("flagOnly");
@@ -59,9 +76,7 @@ public class Wrappit {
 				System.err.println("Must specify PacketWrapper location!");
 				System.exit(2);
 			}
-		}*/
-		test = true;
-		packetWrapper = new File("C:/Users/Dan/Desktop/Eclipse/eclipse/PacketWrapper/PacketWrapper/target/PacketWrapper.jar");
+		}
 
 		try {
 			new Wrappit();
@@ -72,17 +87,13 @@ public class Wrappit {
 	}
 
 	private Wrappit() throws Throwable {
-		// Special case if we're only testing
-		if (test) {
-			WrapperTest.test(packetWrapper);
-			return;
-		}
-
 		// Initialize ProtocolLib
 		MinecraftReflection.setMinecraftPackage(Constants.NMS, Constants.OBC);
+		MinecraftVersion.setCurrentVersion(Constants.CURRENT_VERSION);
 
 		CodePacketReader codeReader = new CodePacketReader();
-		WikiPacketReader wikiReader = new WikiPacketReader(wikiPage);
+		// WikiPacketReader wikiReader = new WikiPacketReader(wikiPage);
+		WikiPacketReader wikiReader = new WikiPacketReader();
 		WrapperGenerator generator = new WrapperGenerator(codeReader, wikiReader);
 
 		File folder = new File("Packets");
@@ -91,6 +102,7 @@ public class Wrappit {
 		folder.mkdirs();
 
 		System.out.println("Generating wrappers...");
+		System.out.println("Saving packets to " + folder.getAbsolutePath());
 
 		for (PacketType type : PacketType.values()) {
 			try {

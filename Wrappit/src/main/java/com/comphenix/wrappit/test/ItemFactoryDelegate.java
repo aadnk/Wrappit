@@ -24,7 +24,7 @@ package com.comphenix.wrappit.test;
 
 import org.bukkit.Color;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_9_R1.inventory.CraftItemFactory;
+import org.bukkit.craftbukkit.v1_15_R1.inventory.CraftItemFactory;
 import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -60,6 +60,11 @@ public class ItemFactoryDelegate implements ItemFactory {
 	@Override
 	public Color getDefaultLeatherColor() {
 		return factory.getDefaultLeatherColor();
+	}
+
+	@Override
+	public Material updateMaterial(ItemMeta itemMeta, Material material) throws IllegalArgumentException {
+		return factory.updateMaterial(itemMeta, material);
 	}
 
 	@Override

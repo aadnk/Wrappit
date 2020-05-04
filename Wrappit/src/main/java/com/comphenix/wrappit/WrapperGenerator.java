@@ -33,16 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import net.minecraft.server.v1_9_R1.Block;
-import net.minecraft.server.v1_9_R1.BlockPosition;
-import net.minecraft.server.v1_9_R1.ChunkCoordIntPair;
-import net.minecraft.server.v1_9_R1.DataWatcher;
-import net.minecraft.server.v1_9_R1.IChatBaseComponent;
-import net.minecraft.server.v1_9_R1.ItemStack;
-import net.minecraft.server.v1_9_R1.NBTTagCompound;
-import net.minecraft.server.v1_9_R1.ServerPing;
-import net.minecraft.server.v1_9_R1.Vec3D;
-import net.minecraft.server.v1_9_R1.WorldType;
+import net.minecraft.server.v1_15_R1.*;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.wrappit.minecraft.CodePacketInfo;
@@ -54,43 +45,50 @@ import com.comphenix.wrappit.wiki.WikiPacketInfo;
 import com.comphenix.wrappit.wiki.WikiPacketReader;
 import com.mojang.authlib.GameProfile;
 
+
 public class WrapperGenerator {
 	public enum Modifiers {
 		BLOCK(Block.class,                            "Material",               "getBlocks()"),
+		BLOCK_DATA(IBlockData.class,                  "WrappedBlockData",       "getBlockData()"),
 		BLOCK_POSITION(BlockPosition.class,           "BlockPosition",          "getBlockPositionModifier()"),
-		BOOLEANS(boolean.class,                       "boolean",                "getSpecificModifier(boolean.class)"),
+		BOOLEANS(boolean.class,                       "boolean",                "getBooleans()"),
 		BYTE_ARRAYS(byte[].class,                     "byte[]",                 "getByteArrays()"),
 		BYTES(byte.class,                             "byte",                   "getBytes()"),
 		CHAT_BASE_COMPONENT(IChatBaseComponent.class, "WrappedChatComponent",   "getChatComponents()"),
 		CHUNK_COORD_INT_PAIR(ChunkCoordIntPair.class, "ChunkCoordIntPair",      "getChunkCoordIntPairs()"),
 		COMPONENT_ARRAY(IChatBaseComponent[].class,   "WrappedChatComponent[]", "getChatComponentArrays()"),
 		DATA_WATCHER_MODIFIER(DataWatcher.class,      "WrappedDataWatcher",     "getDataWatcherModifier()"),
+		DIFFICULTIES(EnumDifficulty.class,            "Difficulty",             "getDifficulties()"),
 		DOUBLES(double.class,                         "double",                 "getDoubles()"),
 		ENUMS(Enum.class,                             "Enum<?>",                "getSpecificModifier(Enum.class)"),
+		ENUM_HAND(EnumHand.class,                     "Hand",                   "getHands()"),
 		FLOATS(float.class,                           "float",                  "getFloat()"),
 		GAME_PROFILE(GameProfile.class,               "WrappedGameProfile",     "getGameProfiles()"),
 		INTEGER_ARRAYS(int[].class,                   "int[]",                  "getIntegerArrays()"),
 		INTEGERS(int.class,                           "int",                    "getIntegers()"),
-		ITEM_ARRAY_MODIFIER(ItemStack[].class,        "ItemStack[]",            "getItemArrayModifier()"),
+		ITEM_LIST_MODIFIER(List.class,                "List<ItemStack>",        "getItemListModifier()"),
 		ITEM_MODIFIER(ItemStack.class,                "ItemStack",              "getItemModifier()"),
 		LONGS(long.class,                             "long",                   "getLongs()"),
 		MAP(Map.class,                                "Map<?,?>",               "getSpecificModifier(Map.class)"),
+		MINECRAFT_KEY(MinecraftKey.class,             "MinecraftKey",           "getMinecraftKeys()"),
 		NBT_MODIFIER(NBTTagCompound.class,            "NbtBase<?>",             "getNbtModifier()"),
 		POSITION_LIST(List.class,                     "List<BlockPosition>",    "getBlockPositionCollectionModifier()"),
 		SET(Set.class,                                "Set<?>",                 "getSpecificModifier(Set.class)"),
 		PUBLIC_KEY_MODIFIER(PublicKey.class,          "PublicKey",              "getSpecificModifier(PublicKey.class)"),
 		SERVER_PING(ServerPing.class,                 "WrappedServerPing",      "getServerPings()"),
 		SHORTS(short.class,                           "short",                  "getShorts()"),
+		SOUND_EFFECT(SoundEffect.class,               "Sound",                  "getSoundEffects()"),
+		SOUND_CATEGORY(SoundCategory.class,           "SoundCategory",          "getSoundCategories()"),
 		STRING_ARRAYS(String[].class,                 "String[]",               "getStringArrays()"),
 		STRINGS(String.class,                         "String",                 "getStrings()"),
-		UUID(UUID.class,                              "UUID",                   "getSpecificModifier(UUID.class)"),
+		UUID(UUID.class,                              "UUID",                   "getUUIDs"),
 		VEC3D(Vec3D.class,                            "Vector",                 "getVectors()"),
 		WORLD_TYPE_MODIFIER(WorldType.class,          "WorldType",              "getWorldTypeModifier()");
 
 		private static Map<Class<?>, Modifiers> inputLookup;
 
 		static {
-			inputLookup = new HashMap<Class<?>, Modifiers>();
+			inputLookup = new HashMap<>();
 
 			for (Modifiers modifier : values()) {
 				inputLookup.put(modifier.inputType, modifier);
@@ -113,7 +111,7 @@ public class WrapperGenerator {
 		private String outputType;
 		private String name;
 
-		private Modifiers(Class<?> inputType, String outputType, String name) {
+		Modifiers(Class<?> inputType, String outputType, String name) {
 			this.inputType = inputType;
 			this.outputType = outputType;
 			this.name = name;
@@ -200,10 +198,11 @@ public class WrapperGenerator {
 			builder.append(header + NEWLN);
 		}
 
-		builder.append("package com.comphenix.packetwrapper;" + NEWLN + NEWLN);
-		builder.append("import com.comphenix.protocol.PacketType;" + NEWLN);
-		builder.append("import com.comphenix.protocol.events.PacketContainer;" + NEWLN + NEWLN);
-		builder.append("public class " + className + " extends AbstractPacket {" + NEWLN + NEWLN);
+		builder.append("package com.comphenix.packetwrapper;").append(NEWLN).append(NEWLN);
+		builder.append("import com.comphenix.protocol.PacketType;").append(NEWLN);
+		builder.append("import com.comphenix.protocol.events.PacketContainer;").append(NEWLN).append(NEWLN);
+		builder.append("public class ").append(className).append(" extends AbstractPacket {").append(NEWLN)
+				.append(NEWLN);
 
 		indent.appendLine("public static final PacketType TYPE = " + getReference(type) + ";");
 		indent.appendLine("");

@@ -22,9 +22,6 @@
  */
 package com.comphenix.wrappit.test;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -36,14 +33,6 @@ import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import net.minecraft.server.v1_9_R1.DispenserRegistry;
-
-import org.bukkit.Bukkit;
-import org.bukkit.Server;
-import org.bukkit.World;
-import org.bukkit.inventory.ItemFactory;
-import org.bukkit.inventory.meta.ItemMeta;
-
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.reflect.FieldUtils;
 import com.comphenix.protocol.utility.Constants;
@@ -51,6 +40,19 @@ import com.comphenix.protocol.utility.MinecraftReflection;
 import com.comphenix.protocol.utility.MinecraftVersion;
 import com.comphenix.wrappit.Wrappit;
 import com.comphenix.wrappit.io.Closer;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
+import net.minecraft.server.v1_15_R1.DispenserRegistry;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Server;
+import org.bukkit.World;
+import org.bukkit.inventory.ItemFactory;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import static org.mockito.Mockito.*;
 
 /**
  * @author dmulloy2
@@ -90,6 +92,11 @@ public class WrapperTest {
 			List<String> classNames = new ArrayList<>();
 			List<String> failures = new ArrayList<>();
 			for (String name : classes) {
+				if (name.endsWith("WrapperPlayServerCombatEvent")) {
+					// TODO Look into effectively testing this wrapper
+					continue;
+				}
+
 				try {
 					Class<?> clazz = loader.loadClass(name);
 					classNames.add(clazz.getSimpleName());
@@ -103,6 +110,10 @@ public class WrapperTest {
 							method.setAccessible(true);
 							if (method.getDeclaringClass().equals(clazz) && method.getParameterTypes().length == 0) {
 								System.out.println("Invoking " + method.getName());
+								if (method.getName().equals("getContents")) {
+									clazz.getMethod("setContentsBuffer", ByteBuf.class).invoke(instance, Unpooled.buffer());
+								}
+
 								method.invoke(instance);
 
 								if (method.getName().equalsIgnoreCase("getEntityID")) {
@@ -118,13 +129,10 @@ public class WrapperTest {
 								}
 							}
 						} catch (Throwable ex) {
-							Throwable cause = ex.getCause();
-							if (!(cause instanceof IllegalStateException)) {
-								System.err.println("Failed to invoke method " + method + ":");
-								ex.printStackTrace();
+							System.err.println("Failed to invoke method " + method + ":");
+							ex.printStackTrace();
 
-								failures.add(clazz.getName() + " :: " + method.getName() + " :: " + cause);
-							}
+							failures.add(clazz.getName() + " :: " + method.getName() + " :: " + ex.getCause());
 						}
 					}
 				} catch (NoSuchMethodException ex) {
@@ -149,7 +157,14 @@ public class WrapperTest {
 				String className = "Wrapper" + Wrappit.getCamelCase(type.getProtocol()) + Wrappit.getCamelCase(type.getSender())
 						+ Wrappit.getCamelCase(type.name());
 				if (! classNames.contains(className)) {
-					failures.add(className);
+					if (type.isDeprecated()) {
+						System.out.println("Wrapper does not exist for deprecated type: " + type);
+					} else if (type.isDynamic()) {
+						System.out.println("PacketType does not exist for packet class: " + type.getPacketClass().getSimpleName());
+					} else {
+						System.err.println("Wrapper does not exist for packet: " + type.toString());
+						failures.add(className);
+					}
 				}
 			}
 
@@ -173,7 +188,7 @@ public class WrapperTest {
 
 			initPackage();
 
-			DispenserRegistry.c(); // Basically registers everything
+			DispenserRegistry.init();
 
 			// Mock the server object
 			Server mockedServer = mock(Server.class);
@@ -192,6 +207,6 @@ public class WrapperTest {
 	private static void initPackage() {
 		// Initialize reflection
 		MinecraftReflection.setMinecraftPackage(Constants.NMS, Constants.OBC);
-		MinecraftVersion.setCurrentVersion(MinecraftVersion.BOUNTIFUL_UPDATE);
+		MinecraftVersion.setCurrentVersion(MinecraftVersion.COLOR_UPDATE);
 	}
 }

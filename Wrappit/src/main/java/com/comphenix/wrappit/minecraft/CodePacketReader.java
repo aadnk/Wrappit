@@ -25,10 +25,7 @@ package com.comphenix.wrappit.minecraft;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -45,7 +42,7 @@ public class CodePacketReader {
 	
 	/**
 	 * Read a particular packet from local code.
-	 * @param packetID - the ID of the packet to read.
+	 * @param type - the type of the packet to read.
 	 * @return The resulting packet information.
 	 * @throws IOException If we are unable to parse the network order.
 	 */
@@ -62,7 +59,7 @@ public class CodePacketReader {
 	}
 	
 	private List<Field> readMemoryOrder(Class<?> packetClass) {
-		final List<Field> result = new ArrayList<Field>();
+		final List<Field> result = new ArrayList<>();
 		final Set<Field> candidates = setUnion(packetClass.getDeclaredFields(), packetClass.getFields());
 				
 		// Use reflection to do this very simply
@@ -78,7 +75,7 @@ public class CodePacketReader {
 
 	private List<Field> readNetworkOrder(final Class<?> packetClass) throws IOException {
 		final ClassReader reader = new ClassReader(packetClass.getCanonicalName());
-		final List<Field> result = new ArrayList<Field>();
+		final List<Field> result = new ArrayList<>();
 
 		reader.accept(new ClassVisitor(Opcodes.ASM4) {
 			@Override
@@ -136,12 +133,10 @@ public class CodePacketReader {
 	 */
 	@SafeVarargs
 	private static <T> Set<T> setUnion(T[]... array) {
-		Set<T> result = new LinkedHashSet<T>();
+		Set<T> result = new LinkedHashSet<>();
 		
 		for (T[] elements : array) {
-			for (T element : elements) {
-				result.add(element);
-			}
+			Collections.addAll(result, elements);
 		}
 		
 		return result;

@@ -45,7 +45,7 @@ import com.comphenix.protocol.PacketType.Sender;
  * @author Kristian
  */
 public class WikiPacketReader {
-	public static final String STANDARD_URL = "http://www.wiki.vg/Protocol";
+	public static final String STANDARD_URL = "https://www.wiki.vg/Protocol";
 	
 	// Stored packet information
 	private Map<PacketType, WikiPacketInfo> packets;
@@ -65,44 +65,48 @@ public class WikiPacketReader {
 	private Map<PacketType, WikiPacketInfo> loadFromDocument(Document doc) {
 		Map<PacketType, WikiPacketInfo> result = new HashMap<PacketType, WikiPacketInfo>();
 		Element bodyContent = doc.getElementById("mw-content-text");
+
+		Element parserOutput = bodyContent.getElementsByClass("mw-parser-output").get(0);
 		
 		// Current protocol and sender
 		Protocol protocol = null;
 		Sender sender = null;
 		
-		for (Element element : bodyContent.children()) {
+		for (Element element : parserOutput.children()) {
 			String tag = element.tagName();
+			System.out.println(element.nodeName());
 			
 			// Protocol candidate
 			if (tag.equals("h2")) {
 				try {
 					String text = getEnumText(element.select(".mw-headline").first());
+					System.out.println("h2 text=" + text);
 					protocol = Protocol.valueOf(text);
 					
 				} catch (IllegalArgumentException e) {
 					// We are in a section that is not a protocol
 					protocol = null;
 				}
-				
 			// Sender candidates
 			} else if (tag.equals("h3")) {
 				String text = getEnumText(element.select(".mw-headline").first());
 				
-				if ("SERVERBOUND".equals(text))
+				if ("SERVERBOUND".equals(text)) {
 					sender = Sender.CLIENT;
-				else if ("CLIENTBOUND".equals(text))
+				} else if ("CLIENTBOUND".equals(text)) {
 					sender = Sender.SERVER;
-				
+				}
 			// Table candidate
-			} else if (tag.equals("table")) {
+			} else if (protocol != null && sender != null && tag.equals("table")) {
 				int columnPacketId = getPacketIDColumn(element);
 				
 				// We have a real packet table
 				if (columnPacketId >= 0) {
 					String string = element.select("td").get(columnPacketId).text().replace("0x", "").trim();
-					System.out.println("string=" + string);
+					if (string.contains(" ")) {
+						string = string.split(" ")[1];
+					}
 					int packetId = Integer.parseInt(string, 16);
-					System.out.println("packetId=" + packetId);
 
 					try {
 						@SuppressWarnings("deprecation") // Hopefully this isn't an issue
